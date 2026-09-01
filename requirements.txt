@@ -1,0 +1,17 @@
+# Network Traffic Anomaly Detection — Dependencies
+# DUT Cybersecurity Soutenance Project
+
+# Core capture parsing — requires tshark (Wireshark CLI) to be installed
+pyshark
+
+# Data manipulation and aggregation
+pandas
+
+# Machine learning — Isolation Forest
+scikit-learn
+
+# Plotting
+matplotlib
+
+# Interactive dashboard
+streamlit
