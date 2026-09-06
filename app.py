@@ -1,6 +1,9 @@
 """
 app.py — NetScan Streamlit Dashboard
 =====================================
+Author: Mohamed Reda QIYAOUI
+DUT Cybersecurity Soutenance 2026
+
 Interactive front-end for the dual-layer network anomaly detection pipeline.
 
 PERFORMANCE NOTE (important for the live demo):
@@ -300,7 +303,7 @@ with st.sidebar:
     )
 
     st.markdown("---")
-    st.caption("NetScan v2.0 — Soutenance Oct 2026")
+    st.caption("NetScan v2.0 • Author: Mohamed Reda QIYAOUI • Soutenance Oct 2026")
 
 # ──────────────────────────────────────────────────────────────────────────────
 # CACHED PCAP PARSING

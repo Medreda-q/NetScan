@@ -1,5 +1,6 @@
 """
 smoke_test.py — Verifies imports and detection logic without needing a .pcap file.
+Author: Mohamed Reda QIYAOUI
 Run with: python smoke_test.py
 """
 import sys

@@ -1,6 +1,6 @@
 # NetScan — Network Anomaly Detection and Analysis
 
-NetScan is an unsupervised machine learning network intrusion and anomaly detection platform developed for the DUT Cybersecurity soutenance project. It combines offline `.pcap` forensic inspection with a live **Calibrate-Then-Monitor** surveillance mode to detect microscopic packet malformations and macroscopic multi-host attacks (such as stealth TCP SYN port scans and volumetric DDoS floods).
+NetScan is an unsupervised machine learning network intrusion and anomaly detection platform developed by **Mohamed Reda QIYAOUI** for the DUT Cybersecurity soutenance project. It combines offline `.pcap` forensic inspection with a live **Calibrate-Then-Monitor** surveillance mode to detect microscopic packet malformations and macroscopic multi-host attacks (such as stealth TCP SYN port scans and volumetric DDoS floods).
 
 ---
 
@@ -129,10 +129,9 @@ python test_pcap_detection.py
 python scratch/test_live_logic.py
 ```
 
----
+## Author & Copyright
 
-## License & Attribution
+- **Author**: Mohamed Reda QIYAOUI
+- **Project**: DUT Cybersecurity Soutenance (October 2026)
+- **License**: MIT License. Copyright © 2026 Mohamed Reda QIYAOUI. All rights reserved.
 
-- Base offline script: [mayanknauni](https://github.com/mayanknauni/Wireshark-Capture-Anomaly-Detection)
-- Extensions & Live Monitoring Architecture: DUT Cybersecurity student (Soutenance Octobre 2026)
-- Licensed under the MIT License.

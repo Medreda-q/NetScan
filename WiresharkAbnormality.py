@@ -41,10 +41,11 @@ that one source contacted hundreds or thousands of distinct destination ports.
 The Live mode operationalizes this capability in real time, adapting to
 each environment's baseline traffic before initiating continuous surveillance.
 
-ORIGINAL AUTHORS
-----------------
-Base script: mayanknauni (https://github.com/mayanknauni/Wireshark-Capture-Anomaly-Detection)
-Extensions:  DUT Cybersecurity student — soutenance October 2026
+AUTHOR & COPYRIGHT
+------------------
+Author: Mohamed Reda QIYAOUI
+DUT Cybersecurity — Soutenance Project 2026
+Copyright (c) 2026 Mohamed Reda QIYAOUI. All rights reserved.
 
 DEPENDENCIES
 ------------

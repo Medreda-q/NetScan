@@ -1,5 +1,6 @@
 """
 test_pcap_detection.py — End-to-end verification on NMAP_PROBE.pcap
+Author: Mohamed Reda QIYAOUI
 """
 import os
 import sys

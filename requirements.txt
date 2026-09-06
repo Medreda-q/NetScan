@@ -1,5 +1,5 @@
 # Network Traffic Anomaly Detection — Dependencies
-# DUT Cybersecurity Soutenance Project
+# Author: Mohamed Reda QIYAOUI — DUT Cybersecurity Soutenance Project 2026
 
 # Packet capture parsing (pyshark with native scapy fallback)
 pyshark
