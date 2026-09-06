@@ -1,0 +1,18 @@
+# Network Traffic Anomaly Detection — Dependencies
+# DUT Cybersecurity Soutenance Project
+
+# Packet capture parsing (pyshark with native scapy fallback)
+pyshark
+scapy
+
+# Data manipulation and aggregation
+pandas
+
+# Machine learning — Isolation Forest
+scikit-learn
+
+# Plotting
+matplotlib
+
+# Interactive dashboard
+streamlit
