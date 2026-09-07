@@ -345,39 +345,6 @@ def action_run_diagnostics():
     subprocess.run([sys.executable, test_path])
 
 
-def action_ips_quarantine():
-    """Manage quarantined IPs and firewall status from terminal."""
-    from ips_engine import get_quarantined_ips, unblock_ip, block_ip, clear_all_quarantine
-    from alerting import load_config, save_config
-
-    cfg = load_config()
-    ips_on = cfg.get("ips_enabled", False)
-
-    print(f"\n{Colors.BOLD}{Colors.CYAN}--- IPS Active Defense & Quarantine Registry ---{Colors.RESET}")
-    print(f"[*] Mode IPS Actif: {'OUI (Confinement pare-feu automatique)' if ips_on else 'NON (Détection seule)'}")
-    
-    t_toggle = input("Voulez-vous basculer le mode IPS automatique ? [y/N]: ").strip().lower()
-    if t_toggle in ("y", "yes"):
-        cfg["ips_enabled"] = not ips_on
-        save_config(cfg)
-        print(f"{Colors.GREEN}[+] Mode IPS mis à jour: {cfg['ips_enabled']}{Colors.RESET}")
-
-    quarantined = get_quarantined_ips()
-    if not quarantined:
-        print(f"{Colors.GREEN}[*] Aucune IP en quarantaine actuellement.{Colors.RESET}")
-    else:
-        print(f"\n{Colors.YELLOW}IPs actuellement confinées par le pare-feu:{Colors.RESET}")
-        for idx, q in enumerate(quarantined, start=1):
-            print(f"  [{idx}] {q.get('ip')} | Motif: {q.get('reason')} | Date: {q.get('timestamp')}")
-
-        unb = input("\nEntrez une IP à débloquer (ou appuyez sur Entrée pour passer) : ").strip()
-        if unb:
-            ok, msg = unblock_ip(unb)
-            if ok:
-                print(f"{Colors.GREEN}[+] {msg}{Colors.RESET}")
-            else:
-                print(f"{Colors.RED}[-] {msg}{Colors.RESET}")
-
 
 def action_test_discord():
     """Configure and test Discord webhook from terminal."""
@@ -409,10 +376,8 @@ def action_generate_report():
     """Generate executive incident report from terminal."""
     from report_generator import generate_html_incident_report
     from detection_engine import load_alerts
-    from ips_engine import get_quarantined_ips
 
     alerts = load_alerts()
-    quarantined = get_quarantined_ips()
 
     stats = {
         "total_packets": sum(a.get("packet_count", 0) for a in alerts),
@@ -426,7 +391,6 @@ def action_generate_report():
     html = generate_html_incident_report(
         session_stats=stats,
         anomalous_windows=alerts,
-        quarantined_ips=quarantined,
     )
 
     out_file = "rapport_incident_netscan.html"
@@ -480,9 +444,8 @@ def main():
         print(f"  {Colors.GREEN}[3]{Colors.RESET} Launch Interactive Web Dashboard (Streamlit)")
         print(f"  {Colors.GREEN}[4]{Colors.RESET} Run System & Smoke Diagnostics")
         print(f"  {Colors.GREEN}[5]{Colors.RESET} Check / Install Packet Capture Drivers")
-        print(f"  {Colors.GREEN}[6]{Colors.RESET} Gestion Pare-Feu & Quarantaine (IPS)")
-        print(f"  {Colors.GREEN}[7]{Colors.RESET} Tester les Alertes Webhook Discord")
-        print(f"  {Colors.GREEN}[8]{Colors.RESET} Générer Rapport d'Incident Forensic (PDF/HTML)")
+        print(f"  {Colors.GREEN}[6]{Colors.RESET} Tester les Alertes Webhook Discord")
+        print(f"  {Colors.GREEN}[7]{Colors.RESET} Générer Rapport d'Incident Forensic (PDF/HTML)")
         print(f"  {Colors.RED}[0]{Colors.RESET} Exit")
 
         choice = input(f"\n{Colors.BOLD}netscan > {Colors.RESET}").strip()
@@ -498,16 +461,14 @@ def main():
         elif choice == "5":
             check_driver_health(verbose=True)
         elif choice == "6":
-            action_ips_quarantine()
-        elif choice == "7":
             action_test_discord()
-        elif choice == "8":
+        elif choice == "7":
             action_generate_report()
         elif choice in ("0", "exit", "quit", "q"):
             print(f"\n{Colors.CYAN}Goodbye!{Colors.RESET}")
             break
         else:
-            print(f"{Colors.YELLOW}[!] Invalid option. Please select 0-8.{Colors.RESET}")
+            print(f"{Colors.YELLOW}[!] Invalid option. Please select 0-7.{Colors.RESET}")
 
 
 

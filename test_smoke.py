@@ -121,28 +121,8 @@ cfg = load_config()
 assert isinstance(cfg, dict), "load_config should return a dict"
 print("    Alerting config persistence  [OK]")
 
-# ── 6. IPS Active Defense & Quarantine test ───────────────────────────────────
-print("\n[6] Testing IPS active defense engine & whitelist safeguards...")
-from ips_engine import block_ip, unblock_ip, is_ip_quarantined, WHITELIST_IPS
-
-# Test whitelist protection (e.g. 127.0.0.1 must never be blocked)
-ok, msg = block_ip("127.0.0.1", reason="Test Whitelist")
-assert not ok, "127.0.0.1 must be protected by whitelist"
-print("    Whitelist protection (127.0.0.1 protected)  [OK]")
-
-# Test quarantine and unblock workflow
-test_ip = "198.51.100.99"
-ok_b, msg_b = block_ip(test_ip, reason="Smoke Test Simulation")
-assert ok_b, f"Block IP failed: {msg_b}"
-assert is_ip_quarantined(test_ip), f"IP {test_ip} should be marked as quarantined"
-
-ok_u, msg_u = unblock_ip(test_ip)
-assert ok_u, f"Unblock IP failed: {msg_u}"
-assert not is_ip_quarantined(test_ip), f"IP {test_ip} should no longer be quarantined"
-print("    Quarantine and unblock lifecycle  [OK]")
-
-# ── 7. Executive Incident Report Generator test ───────────────────────────────
-print("\n[7] Testing Executive Incident Report Generator (HTML/PDF)...")
+# ── 6. Executive Incident Report Generator test ───────────────────────────────
+print("\n[6] Testing Executive Incident Report Generator (HTML/PDF)...")
 from report_generator import generate_html_incident_report
 
 test_stats = {
@@ -156,14 +136,10 @@ test_stats = {
 test_anom = [
     {"Src_Address": "192.168.1.50", "Anomaly_Type": "Port Scan", "packet_count": 500, "unique_dst_ports": 490, "time_window": 0.0}
 ]
-test_quar = [
-    {"ip": "192.168.1.50", "reason": "Port Scan", "timestamp": "2026-09-07 14:00:00", "status": "Active", "details": "Rule Added"}
-]
 
 report_html = generate_html_incident_report(
     session_stats=test_stats,
     anomalous_windows=test_anom,
-    quarantined_ips=test_quar,
 )
 
 assert "<!DOCTYPE html>" in report_html, "Report must be valid HTML5"

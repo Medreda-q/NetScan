@@ -37,9 +37,6 @@ NetScan operates across three complementary detection tiers:
   Captures live traffic from a chosen network interface to learn the session's normal behavioral baseline. Fits and stores a session `StandardScaler` and `IsolationForest` without modifying the global model structure. Shows real-time countdown status: `"Learning normal traffic... X seconds remaining"`.
 - **Phase 2 — Continuous Monitoring (every N seconds, default: 5s)**:
   Continuously aggregates live streaming windows, scores them against the Phase 1 calibrated baseline, and flags port scans and floods immediately.
-### 4. Intrusion Prevention System (IPS) & Active Defense
-- **Automated Host Quarantine**: When activated, hostile IP addresses flagged for port scans or DDoS floods are instantly contained at the OS firewall level (`Windows Advanced Firewall` via `netsh` or `Linux iptables`).
-- **Quarantine Registry & Unblock**: Centralized registry tracking quarantined hosts, attack vectors, and timestamps, with 1-click unblock capabilities and whitelist protection (`127.0.0.1`, loopback).
 
 ### 5. SOC Alerting & SIEM Integration
 - **Real-Time Discord Webhooks**: Streams rich embeds containing threat classification, source IP, targeted port diversity, packet volume, and containment status directly to Discord or SIEM endpoints.
@@ -79,7 +76,7 @@ sudo ./netscan.sh
 ```
 
 **Quick CLI flags:**
-- `python netscan.py` — Interactive menu (Live surveillance, PCAP forensics, Dashboard, Diagnostics, IPS quarantine, Discord test, Report generator)
+- `python netscan.py` — Interactive menu (Live surveillance, PCAP forensics, Dashboard, Diagnostics, Discord test, Report generator)
 - `python netscan.py --live` — Directly start live network capture
 - `python netscan.py --pcap sample_nmap_attack.pcap` — Directly run offline forensic inspection
 - `python netscan.py --dashboard` — Directly launch the Streamlit web dashboard
@@ -93,7 +90,6 @@ streamlit run dashboard.py
 The dashboard features four comprehensive modules:
 - **📦 Analyse de Capture (PCAP)**: Upload `.pcap` files for deep microscopic (Layer 1) and macroscopic (Layer 2) behavioral analysis, with instant Executive HTML/PDF incident report export.
 - **📡 Surveillance Réseau en Direct (Live)**: Real-time Calibrate-Then-Monitor surveillance with countdowns, live anomaly logging, automated firewall blocks, and Discord alerts.
-- **🛡️ Pare-feu & Confinement (IPS)**: Active intrusion prevention mode toggle, manual quarantine, registry of blocked rules, and unblock actions.
 - **🔔 Alertes & Intégrations SIEM**: Configure and test Discord webhooks with live visual embed previews.
 
 ### 3. Core Engine CLI

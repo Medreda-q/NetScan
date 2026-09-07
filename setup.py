@@ -19,7 +19,7 @@ setup(
     version="1.0.0",
     author="Mohamed Reda QIYAOUI",
     author_email="m.qiyaoui@student.est.ma",
-    description="Unsupervised Machine Learning Network Intrusion Detection & Prevention System (NIDS/IPS)",
+    description="Unsupervised Machine Learning Network Intrusion Detection System (NIDS)",
     long_description=long_description,
     long_description_content_type="text/markdown",
     url="https://github.com/Medreda-q/NetScan",
@@ -29,7 +29,6 @@ setup(
         "dashboard",
         "netscan",
         "alerting",
-        "ips_engine",
         "report_generator",
     ],
     install_requires=[
