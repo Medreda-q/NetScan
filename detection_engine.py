@@ -64,7 +64,6 @@ import uuid
 
 import numpy as np
 import pandas as pd
-import matplotlib.pyplot as plt
 from sklearn.ensemble import IsolationForest
 from sklearn.preprocessing import StandardScaler
 import pyshark
@@ -433,50 +432,6 @@ def analyze_anomalies(data):
         label = LABELS_FR.get(row["Anomaly_Type"], row["Anomaly_Type"])
         print(f"  {idx+1:<6} {row['Protocol']:<10} {src:<28} {dst:<28} {label}")
 
-
-def plot_anomalies(data):
-    """
-    [ORIGINAL — unchanged]
-    Layer 1 visualization: scatter plot of packet Length vs. packet index,
-    color-coded by anomaly type. Shows which individual packets were flagged
-    and why (retransmission, reset, oversized, etc.).
-    """
-    plt.figure(figsize=(12, 8))
-
-    # Separate normal and abnormal packets
-    normal_packets = data[data["Anomaly"] == 1]
-    abnormal_packets = data[data["Anomaly"] == -1]
-
-    # Plot normal packets
-    plt.scatter(
-        normal_packets.index, normal_packets["Length"],
-        color="blue", label="Normal Packets", s=5, alpha=0.5
-    )
-
-    # Highlight abnormal packets with retransmissions and reset flags
-    retransmissions = abnormal_packets[abnormal_packets["Retransmission"]]
-    resets = abnormal_packets[abnormal_packets["Reset_Flag"]]
-    high_latency = abnormal_packets[abnormal_packets["Anomaly_Type"] == "High Latency"]
-    unexpected_protocol = abnormal_packets[
-        abnormal_packets["Anomaly_Type"] == "Unexpected Protocol"
-    ]
-    malformed_packet = abnormal_packets[
-        abnormal_packets["Anomaly_Type"] == "Malformed Packet"
-    ]
-
-    plt.scatter(retransmissions.index, retransmissions["Length"], color="orange", label="Retransmissions")
-    plt.scatter(resets.index, resets["Length"], color="red", label="Reset Flags")
-    plt.scatter(high_latency.index, high_latency["Length"], color="green", label="High Latency")
-    plt.scatter(unexpected_protocol.index, unexpected_protocol["Length"], color="purple", label="Unexpected Protocol")
-    plt.scatter(malformed_packet.index, malformed_packet["Length"], color="brown", label="Malformed Packet")
-
-    plt.title("Packet Length vs. Index with Highlighted Anomalies")
-    plt.xlabel("Packet Index")
-    plt.ylabel("Packet Length")
-    plt.legend()
-    plt.show()
-
-
 # ==============================================================================
 # SECTION 2 — NEW FUNCTIONS: Windowed Behavioral Analysis Layer
 # ==============================================================================
@@ -685,69 +640,6 @@ def detect_window_anomalies(window_df):
     window_df.loc[flood_mask, "Anomaly_Type"] = "Flood / DDoS"
 
     return window_df
-
-
-def plot_window_anomalies(window_df):
-    """
-    [NEW — Layer 2 visualization]
-    Scatter plot of unique_dst_ports (Y) vs packet_count (X) for each
-    behavioral window, color-coded by anomaly type.
-
-    WHY these axes?
-    ---------------
-    These two features are the most diagnostic for distinguishing attack types:
-
-    - X-axis (packet_count): raw volume sent by a source in one time window.
-      A normal host sends a handful of packets; a flood source sends hundreds.
-
-    - Y-axis (unique_dst_ports): port diversity. A normal host connects to
-      a few well-known ports (80, 443, 22). A port scanner contacts hundreds
-      of unique ports in seconds.
-
-    Quadrant interpretation:
-      Bottom-left  : few packets, few ports → NORMAL traffic
-      Top-left     : many unique ports, moderate packet count → PORT SCAN
-      Bottom-right : many packets, few ports → FLOOD / DDoS
-      Top-right    : both high → aggressive scan + flood (rare but possible)
-
-    Point size encodes avg_packet_length so large-payload attacks are visually
-    distinguishable from small-packet floods (e.g. SYN flood vs. UDP amplification).
-    """
-    plt.figure(figsize=(12, 8))
-
-    colors = {
-        "Normal": "steelblue",
-        "Port Scan": "red",
-        "Flood / DDoS": "darkorange",
-    }
-
-    for label, group in window_df.groupby("Anomaly_Type"):
-        # Scale point sizes by average packet length — larger payloads = bigger dots
-        max_len = window_df["avg_packet_length"].max() or 1
-        sizes = (group["avg_packet_length"] / max_len * 150 + 15).fillna(20)
-
-        plt.scatter(
-            group["packet_count"],
-            group["unique_dst_ports"],
-            c=colors.get(label, "gray"),
-            label=label,
-            alpha=0.75,
-            s=sizes,
-            edgecolors="white",
-            linewidths=0.4,
-        )
-
-    plt.title(
-        "Behavioral Window Analysis: Packet Volume vs. Port Diversity\n"
-        "(point size = avg packet length; each point = one source IP per time window)"
-    )
-    plt.xlabel("Packet Count (per source per time window)")
-    plt.ylabel("Unique Destination Ports (per source per time window)")
-    plt.legend()
-    plt.grid(True, alpha=0.25)
-    plt.tight_layout()
-    plt.show()
-
 
 # ==============================================================================
 # SECTION 3 — LIVE CALIBRATE-THEN-MONITOR ANOMALY DETECTION ENGINE
@@ -1353,9 +1245,6 @@ if __name__ == "__main__":
         print("\n[3] Analyzing per-packet anomalies...")
         analyze_anomalies(analyzed_data)
 
-        print("\n[4] Plotting per-packet anomalies...")
-        plot_anomalies(analyzed_data)
-
         # Save per-packet anomalies to CSV
         packets_csv = "analyzed_capture_packets.csv"
         packet_anomalies = analyzed_data[analyzed_data["Anomaly"] == -1]
@@ -1363,14 +1252,11 @@ if __name__ == "__main__":
         print(f"\nPer-packet anomalies saved to: {packets_csv}")
 
         # ── Layer 2: Windowed behavioral pipeline (new) ───────────────────────────
-        print(f"\n[5] Aggregating traffic into {window_size}s time windows...")
+        print(f"\n[4] Aggregating traffic into {window_size}s time windows...")
         window_df = aggregate_windows(analyzed_data, window_size=window_size)
 
-        print("\n[6] Detecting windowed behavioral anomalies (Layer 2 — new model)...")
+        print("\n[5] Detecting windowed behavioral anomalies (Layer 2 — new model)...")
         window_results = detect_window_anomalies(window_df)
-
-        print("\n[7] Plotting windowed behavioral anomalies...")
-        plot_window_anomalies(window_results)
 
         # Save windowed anomalies to CSV
         windows_csv = "analyzed_capture_windows.csv"
