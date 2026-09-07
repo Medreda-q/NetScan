@@ -37,7 +37,13 @@ NetScan operates across three complementary detection tiers:
   Captures live traffic from a chosen network interface to learn the session's normal behavioral baseline. Fits and stores a session `StandardScaler` and `IsolationForest` without modifying the global model structure. Shows real-time countdown status: `"Learning normal traffic... X seconds remaining"`.
 - **Phase 2 — Continuous Monitoring (every N seconds, default: 5s)**:
   Continuously aggregates live streaming windows, scores them against the Phase 1 calibrated baseline, and flags port scans and floods immediately.
-- **Reporting Only**: Detected threats are logged and visualized in real time. Network traffic is **never blocked or dropped**.
+### 4. Intrusion Prevention System (IPS) & Active Defense
+- **Automated Host Quarantine**: When activated, hostile IP addresses flagged for port scans or DDoS floods are instantly contained at the OS firewall level (`Windows Advanced Firewall` via `netsh` or `Linux iptables`).
+- **Quarantine Registry & Unblock**: Centralized registry tracking quarantined hosts, attack vectors, and timestamps, with 1-click unblock capabilities and whitelist protection (`127.0.0.1`, loopback).
+
+### 5. SOC Alerting & SIEM Integration
+- **Real-Time Discord Webhooks**: Streams rich embeds containing threat classification, source IP, targeted port diversity, packet volume, and containment status directly to Discord or SIEM endpoints.
+- **Executive Forensic Report Export (PDF / HTML)**: 1-click generation of professional executive incident reports complete with KPI cards, threat actor breakdowns, firewall actions, and NIST/CIS remediation guidance, printable to PDF.
 
 ---
 
@@ -58,24 +64,44 @@ Packet sniffing on live network interfaces requires elevated privileges:
 
 ## Usage
 
-### 1. Interactive Streamlit Dashboard (Recommended)
-Launch the web interface:
+### 1. Unified Kali-Style Terminal Launcher (Recommended)
+NetScan includes a self-bootstrapping terminal launcher that automatically checks and installs missing dependencies and validates packet capture drivers (Npcap on Windows, libpcap/root on Linux):
+
+```bash
+# Windows
+netscan.bat
+# or
+python netscan.py
+
+# Linux / Kali
+chmod +x netscan.sh
+sudo ./netscan.sh
+```
+
+**Quick CLI flags:**
+- `python netscan.py` — Interactive menu (Live surveillance, PCAP forensics, Dashboard, Diagnostics, IPS quarantine, Discord test, Report generator)
+- `python netscan.py --live` — Directly start live network capture
+- `python netscan.py --pcap sample_nmap_attack.pcap` — Directly run offline forensic inspection
+- `python netscan.py --dashboard` — Directly launch the Streamlit web dashboard
+- `python netscan.py --check` — Run system and driver diagnostics
+
+### 2. Interactive Streamlit Dashboard
+Launch the web interface directly:
 ```bash
 streamlit run dashboard.py
 ```
-The dashboard features three tabs:
-- **📡 Live Monitoring**: Select a network adapter, tune calibration duration and window size, start live surveillance, and observe real-time countdowns and anomaly logs.
-- **📦 Per-Packet Analysis (Layer 1)**: Upload a `.pcap` file to visualize packet-level anomalies on an interactive scatter plot.
-- **🪟 Per-Window Behavioral Analysis (Layer 2)**: Dynamically adjust time window sizes with the slider to inspect behavioral clusters and port scan detections.
+The dashboard features four comprehensive modules:
+- **📦 Analyse de Capture (PCAP)**: Upload `.pcap` files for deep microscopic (Layer 1) and macroscopic (Layer 2) behavioral analysis, with instant Executive HTML/PDF incident report export.
+- **📡 Surveillance Réseau en Direct (Live)**: Real-time Calibrate-Then-Monitor surveillance with countdowns, live anomaly logging, automated firewall blocks, and Discord alerts.
+- **🛡️ Pare-feu & Confinement (IPS)**: Active intrusion prevention mode toggle, manual quarantine, registry of blocked rules, and unblock actions.
+- **🔔 Alertes & Intégrations SIEM**: Configure and test Discord webhooks with live visual embed previews.
 
-### 2. Command-Line Interface (CLI)
-Run the core detection script:
+### 3. Core Engine CLI
+Run the core detection script directly:
 ```bash
 python detection_engine.py
 ```
-You will be prompted to select an operational mode:
-- **Option [1] — Live Capture & Monitoring**: Prompts for network interface name, calibration duration (seconds), and window size (seconds). Runs Phase 1 calibration followed by continuous Phase 2 monitoring with real-time alerts.
-- **Option [2] — File Analysis Mode**: Prompts for path to an offline `.pcap` capture file (e.g. `sample_nmap_attack.pcap`) and window size, executing full Layer 1 & Layer 2 offline forensics.
+
 
 ---
 

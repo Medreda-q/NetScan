@@ -1,7 +1,9 @@
 """
-detection_engine.py — Network Traffic Anomaly Detector
-======================================================
+detection_engine.py — Network Traffic Anomaly Detector & IPS Engine
+====================================================================
+Author: Mohamed Reda QIYAOUI
 DUT Cybersecurity — Stage d'Initiation (Septembre 2026)
+École Supérieure de Technologie (EST)
 
 ARCHITECTURE OVERVIEW
 ---------------------
@@ -1258,9 +1260,10 @@ def clear_alerts(filepath=ALERTS_FILE):
 # ==============================================================================
 
 if __name__ == "__main__":
-    print("=" * 65)
-    print("NetScan — Network Anomaly Detection System (DUT Stage d'Initiation — Septembre 2026)")
-    print("=" * 65)
+    print("=" * 70)
+    print("NetScan — Network Anomaly Detection System (NIDS / IPS)")
+    print("Conçu et Développé par : Mohamed Reda QIYAOUI — DUT Cybersécurité")
+    print("=" * 70)
     print("Select operational mode:")
     print("  [1] Live Capture & Monitoring (Phase 1 Calibration -> Phase 2 Detection)")
     print("  [2] File Analysis Mode (Offline .pcap processing)")

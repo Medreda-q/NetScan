@@ -51,6 +51,11 @@ from detection_engine import (
     ALERTS_FILE,
 )
 
+from alerting import load_config, save_config, send_discord_alert, test_discord_webhook
+from report_generator import generate_html_incident_report
+
+
+
 
 def highlight_type(val):
     """Color-code anomaly types for Streamlit table display."""
@@ -78,10 +83,12 @@ def apply_anomaly_style(df, display_cols):
 # ──────────────────────────────────────────────────────────────────────────────
 
 st.set_page_config(
-    page_title="NetScan — Network Anomaly Detector",
+    page_title="NetScan — Mohamed Reda QIYAOUI | NIDS/IPS",
+    page_icon="🛡️",
     layout="wide",
     initial_sidebar_state="collapsed",
 )
+
 
 st.markdown(
     """
@@ -466,7 +473,7 @@ def render_alerts_center():
         csv_alerts = df_export.to_csv(index=False, sep=";").encode("utf-8-sig")
         json_alerts = json.dumps(filtered_alerts, indent=2).encode("utf-8")
 
-        exp_col1, exp_col2, _ = st.columns([1.5, 1.5, 3])
+        exp_col1, exp_col2, exp_col3 = st.columns([1.2, 1.2, 2.2])
         with exp_col1:
             st.download_button(
                 label="Exporter en CSV",
@@ -483,6 +490,28 @@ def render_alerts_center():
                 mime="application/json",
                 key="soc_dl_json",
             )
+        with exp_col3:
+            report_html = generate_html_incident_report(
+                session_stats={
+                    "total_packets": sum(a.get("packet_count", 0) for a in alerts_list),
+                    "total_windows": len(alerts_list),
+                    "port_scan_count": sum(1 for a in alerts_list if a.get("anomaly_type") == "Port Scan"),
+                    "flood_count": sum(1 for a in alerts_list if a.get("anomaly_type") == "Flood / DDoS"),
+                    "packet_anomaly_count": len(alerts_list),
+                    "source_target": "Registre des Incidents SOC",
+                },
+                anomalous_windows=alerts_list,
+            )
+
+            st.download_button(
+                label="📄 Rapport Exécutif (PDF / HTML)",
+                data=report_html.encode("utf-8"),
+                file_name="rapport_incident_netscan.html",
+                mime="text/html",
+                key="soc_dl_html_report",
+                help="Ouvrez ce fichier dans votre navigateur pour l'imprimer ou l'enregistrer en PDF.",
+            )
+
 
     st.markdown("### Flux des Incidents de Sécurité")
 
@@ -746,9 +775,27 @@ def render_live_monitoring():
                             add_alert(alt_rec)
                         except Exception:
                             pass
+
+                        # ── Discord SOC Alerting ──────────────────────────────────
+                        app_cfg = load_config()
+                        discord_url = app_cfg.get("discord_webhook_url")
+                        if discord_url:
+                            send_discord_alert(
+                                discord_url,
+                                {
+                                    "anomaly_type": row["Anomaly_Type"],
+                                    "src_ip": row["Src_Address"],
+                                    "packet_count": int(row.get("packet_count", 0)),
+                                    "unique_ports": int(row.get("unique_dst_ports", 0)),
+                                    "window_time": str(row.get("time_window", now_str)),
+                                },
+                            )
+
+
                         st.toast(
                             f"Anomalie Détectée : {row['Anomaly_Type']} depuis {row['Src_Address']}"
                         )
+
 
             except Exception as e_mon:
                 st.session_state.live_monitoring_active = False
@@ -795,6 +842,76 @@ def render_live_monitoring():
         st.rerun()
 
 
+
+
+
+# ──────────────────────────────────────────────────────────────────────────────
+# HELPER: RENDER SIEM & WEBHOOK INTEGRATION
+# ──────────────────────────────────────────────────────────────────────────────
+
+def render_siem_config():
+    """Renders SIEM and Discord webhook alerting configuration."""
+    st.subheader("Intégrations SIEM & Notifications SOC")
+    st.caption(
+        "Transmettez instantanément les alertes d'attaques réseau vers un canal Discord, un webhook Slack ou votre SIEM."
+    )
+
+    app_cfg = load_config()
+    current_webhook = app_cfg.get("discord_webhook_url", "")
+
+    st.markdown("### 🔔 Configuration Discord Webhook")
+    new_url = st.text_input(
+        "URL du Webhook Discord :",
+        value=current_webhook,
+        placeholder="https://discord.com/api/webhooks/...",
+        help="Créez un Webhook dans les paramètres de votre salon Discord (Intégrations > Webhooks).",
+    )
+
+    col_btn_test, col_btn_save, _ = st.columns([1.5, 1.5, 3])
+    with col_btn_test:
+        if st.button("Tester le Webhook", type="secondary"):
+            if not new_url:
+                st.warning("Veuillez renseigner une URL de webhook avant de tester.")
+            else:
+                ok, msg = test_discord_webhook(new_url)
+                if ok:
+                    st.success("Test réussi ! Vérifiez votre canal Discord.")
+                else:
+                    st.error(f"Échec du test : {msg}")
+
+    with col_btn_save:
+        if st.button("Enregistrer", type="primary"):
+            app_cfg["discord_webhook_url"] = new_url.strip()
+            save_config(app_cfg)
+            st.success("Configuration sauvegardée !")
+
+    st.markdown("---")
+    st.markdown("### Aperçu d'un Embed d'Alerte Discord NetScan")
+    st.markdown(
+        """
+        <div style="background: #2f3136; border-left: 4px solid #ed4245; padding: 14px 18px; border-radius: 6px; max-width: 650px; font-family: sans-serif; color: #dcddde;">
+            <div style="font-weight: 700; color: #ffffff; font-size: 1.05rem; margin-bottom: 6px;">
+                🚨 NetScan NIDS Alert — Port Scan
+            </div>
+            <div style="font-size: 0.85rem; color: #b9bbbe; margin-bottom: 12px;">
+                Une activité réseau anormale a été interceptée par le moteur d'apprentissage non supervisé.<br>
+                🛡️ <b>Action IPS : IP bloquée et mise en quarantaine</b>
+            </div>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; font-size: 0.85rem;">
+                <div><b>🌐 Adresse Source :</b> <code style="background: #202225; padding: 2px 5px; border-radius: 3px;">10.0.2.15</code></div>
+                <div><b>🎯 Ports Ciblés :</b> <code>491 ports</code></div>
+                <div><b>📦 Volume Paquets :</b> <code>524 paquets</code></div>
+                <div><b>⚡ Sévérité :</b> HIGH (Reconnaissance)</div>
+            </div>
+            <div style="margin-top: 10px; font-size: 0.75rem; color: #72767d;">
+                NetScan Intrusion Prevention System | Mohamed Reda QIYAOUI
+            </div>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
+
+
 # ──────────────────────────────────────────────────────────────────────────────
 # HERO HEADER
 # ──────────────────────────────────────────────────────────────────────────────
@@ -802,30 +919,38 @@ def render_live_monitoring():
 st.markdown(
     """
     <div class="hero">
-        <div class="badge">DUT — Stage d'Initiation Cybersécurité</div>
+        <div class="badge">DUT Cybersécurité — Mohamed Reda QIYAOUI</div>
         <h1>NetScan — Network Anomaly Detector</h1>
         <p>
-            Détection d'intrusions et anomalies réseau (Scans de ports, DDoS, paquets anormaux)
-            sans signatures préalables via Machine Learning non supervisé (Isolation Forest).
+            Plateforme de Détection d'Intrusions Réseau développée par <b>Mohamed Reda QIYAOUI</b>.
+            Analyse d'anomalies (Scans de ports, DDoS, paquets malformés) sans signatures préalables via Machine Learning non supervisé (Isolation Forest).
         </p>
+
     </div>
     """,
     unsafe_allow_html=True,
 )
 
 
+
 # ──────────────────────────────────────────────────────────────────────────────
-# MAIN NAVIGATION: TWO OPTIONS (UPLOAD / PCAP vs. LIVE MONITORING)
+# MAIN NAVIGATION: FOUR OPTIONS (UPLOAD / PCAP, LIVE, IPS, SIEM)
 # ──────────────────────────────────────────────────────────────────────────────
 
-col_nav1, col_nav2, col_nav3 = st.columns([1, 2.8, 1])
+col_nav1, col_nav2, col_nav3 = st.columns([0.5, 4, 0.5])
 with col_nav2:
     mode = st.radio(
         "Mode de fonctionnement",
-        options=["Analyse de Capture (Fichier PCAP)", "Surveillance Réseau en Direct (Live)"],
+        options=[
+            "Analyse de Capture (Fichier PCAP)",
+            "Surveillance Réseau en Direct (Live)",
+            "🔔 Alertes & Intégrations SIEM",
+        ],
         horizontal=True,
         label_visibility="collapsed",
     )
+
+
 
 
 # ══════════════════════════════════════════════════════════════════════════════
@@ -1155,7 +1280,7 @@ if mode == "Analyse de Capture (Fichier PCAP)":
 # OPTION 2 : SURVEILLANCE RÉSEAU EN DIRECT (LIVE SNIFFING + ALERTS)
 # ══════════════════════════════════════════════════════════════════════════════
 
-else:
+elif mode == "Surveillance Réseau en Direct (Live)":
     render_live_monitoring()
 
     st.markdown("---")
@@ -1163,3 +1288,18 @@ else:
     alert_badge = f" ({len(initial_alerts)})" if initial_alerts else ""
     with st.expander(f"Historique des Alertes SOC Enregistrées{alert_badge}", expanded=False):
         render_alerts_center()
+
+elif mode == "🔔 Alertes & Intégrations SIEM":
+    render_siem_config()
+
+st.markdown(
+    """
+    <div style="text-align: center; margin-top: 50px; padding: 25px 10px; border-top: 1px solid rgba(255,255,255,0.1); color: #64748b; font-size: 0.85rem;">
+        NetScan NIDS Platform &nbsp;•&nbsp; Conçu et Développé par <b>Mohamed Reda QIYAOUI</b> &nbsp;•&nbsp; Soutenance DUT Cybersécurité — EST
+    </div>
+    """,
+    unsafe_allow_html=True,
+)
+
+
+

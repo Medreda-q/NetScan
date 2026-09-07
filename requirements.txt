@@ -1,5 +1,11 @@
-# Network Traffic Anomaly Detection — Dependencies
-# Author: Mohamed Reda QIYAOUI — DUT Cybersecurity Stage d'Initiation (Septembre 2026)
+# ==============================================================================
+# SYSTEM-LEVEL PREREQUISITES (Required for Windows Live Packet Capture):
+#   - Windows: Npcap (https://npcap.com/#download)
+#     * Must be installed with 'Install Npcap in WinPcap API-compatible Mode' enabled.
+#     * Required by Scapy / PyShark for live packet capture on Windows.
+#     * Run terminal or IDE as Administrator ('net start npcap').
+#   - Linux / macOS: libpcap (preinstalled on Kali Linux; run with sudo).
+# ==============================================================================
 
 # Packet capture parsing (pyshark with native scapy fallback)
 pyshark
@@ -16,3 +22,4 @@ matplotlib
 
 # Interactive dashboard
 streamlit
+
