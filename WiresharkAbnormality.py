@@ -53,9 +53,12 @@ DEPENDENCIES
 """
 
 import asyncio
+import datetime
+import json
 import os
 import sys
 import time
+import uuid
 
 import numpy as np
 import pandas as pd
@@ -1082,6 +1085,21 @@ def run_live_detection(
                         f"Unique Ports: {row['unique_dst_ports']} | "
                         f"SYN Count: {row['syn_count']}"
                     )
+                    try:
+                        alert_rec = create_alert_record(
+                            src_address=row['Src_Address'],
+                            anomaly_type=row['Anomaly_Type'],
+                            packet_count=row['packet_count'],
+                            unique_dst_ports=row['unique_dst_ports'],
+                            unique_dst_ips=row.get('unique_dst_ips', 1),
+                            syn_count=row['syn_count'],
+                            avg_packet_length=row.get('avg_packet_length', 0.0),
+                            time_window=row.get('time_window'),
+                            origin="Live Surveillance",
+                        )
+                        add_alert(alert_rec)
+                    except Exception:
+                        pass
             else:
                 print(
                     f"[{now_str}] Window {window_idx} ({len(pkts)} packets): Normal traffic."
@@ -1101,6 +1119,138 @@ def run_live_detection(
 
     except KeyboardInterrupt:
         print("\nMonitoring stopped by user.")
+
+
+# ──────────────────────────────────────────────────────────────────────────────
+# INCIDENT NOTIFICATION & AUDIT TRAIL LOGGING
+# ──────────────────────────────────────────────────────────────────────────────
+ALERTS_FILE = "alerts_history.json"
+
+
+def create_alert_record(
+    src_address,
+    anomaly_type,
+    packet_count=0,
+    unique_dst_ports=0,
+    unique_dst_ips=0,
+    syn_count=0,
+    avg_packet_length=0.0,
+    time_window=None,
+    origin="Live Surveillance",
+):
+    """
+    Construct a standardized security incident dictionary with severity and SOC recommendations.
+    """
+    now_dt = datetime.datetime.now()
+    timestamp_str = now_dt.strftime("%Y-%m-%d %H:%M:%S")
+    alert_id = f"ALT-{now_dt.strftime('%Y%m%d%H%M%S')}-{uuid.uuid4().hex[:6].upper()}"
+
+    # Severity determination
+    if anomaly_type == "Port Scan":
+        severity = "CRITICAL"
+        description = (
+            f"Stealth sequential port scan detected from {src_address}. "
+            f"Contacted {unique_dst_ports} unique destination ports across {packet_count} packets "
+            f"(port diversity ratio: {(unique_dst_ports / max(packet_count, 1)):.1%})."
+        )
+        recommendation = (
+            f"Immediate mitigation: Block {src_address} at perimeter gateway "
+            f"(`iptables -A INPUT -s {src_address} -j DROP` or edge firewall rule). "
+            f"Review audit logs on targeted hosts for service exploitation."
+        )
+    elif anomaly_type == "Flood / DDoS":
+        severity = "HIGH"
+        description = (
+            f"High-volume packet flood detected from {src_address} "
+            f"({packet_count} packets in window, avg length {avg_packet_length:.1f} bytes)."
+        )
+        recommendation = (
+            f"Apply ingress rate limiting and TCP SYN-cookie enforcement for {src_address}. "
+            f"Verify whether target internal service is saturated or sustaining an amplification attack."
+        )
+    else:
+        severity = "MEDIUM"
+        description = (
+            f"Behavioral network anomaly ({anomaly_type}) detected from {src_address}."
+        )
+        recommendation = (
+            f"Investigate endpoint {src_address} for protocol misconfiguration, corrupted framing, "
+            f"or unauthorized tool activity."
+        )
+
+    return {
+        "id": alert_id,
+        "timestamp": timestamp_str,
+        "severity": severity,
+        "anomaly_type": str(anomaly_type),
+        "src_address": str(src_address),
+        "packet_count": int(packet_count),
+        "unique_dst_ports": int(unique_dst_ports),
+        "unique_dst_ips": int(unique_dst_ips),
+        "syn_count": int(syn_count),
+        "avg_packet_length": round(float(avg_packet_length), 1),
+        "time_window": float(time_window) if time_window is not None else None,
+        "origin": str(origin),
+        "description": description,
+        "recommendation": recommendation,
+    }
+
+
+def load_alerts(filepath=ALERTS_FILE):
+    """Load persistent security alerts from JSON file."""
+    if not os.path.exists(filepath):
+        return []
+    try:
+        with open(filepath, "r", encoding="utf-8") as f:
+            data = json.load(f)
+            if isinstance(data, list):
+                return data
+            return []
+    except Exception:
+        return []
+
+
+def save_alerts(alerts, filepath=ALERTS_FILE):
+    """Save security alerts list to JSON file atomically."""
+    try:
+        tmp_file = f"{filepath}.tmp"
+        with open(tmp_file, "w", encoding="utf-8") as f:
+            json.dump(alerts, f, indent=2)
+        if os.path.exists(filepath):
+            os.replace(tmp_file, filepath)
+        else:
+            os.rename(tmp_file, filepath)
+        return True
+    except Exception:
+        return False
+
+
+def add_alert(alert_dict, filepath=ALERTS_FILE):
+    """Add a new alert to the persistent audit trail (avoids exact duplicate entries)."""
+    alerts = load_alerts(filepath)
+    for a in alerts:
+        if (
+            a.get("src_address") == alert_dict.get("src_address")
+            and a.get("anomaly_type") == alert_dict.get("anomaly_type")
+            and a.get("time_window") == alert_dict.get("time_window")
+            and alert_dict.get("time_window") is not None
+        ):
+            return alerts
+    alerts.insert(0, alert_dict)
+    alerts = alerts[:500]
+    save_alerts(alerts, filepath)
+    return alerts
+
+
+def clear_alerts(filepath=ALERTS_FILE):
+    """Clear all historical alerts."""
+    try:
+        if os.path.exists(filepath):
+            os.remove(filepath)
+    except Exception:
+        pass
+    return []
+
 
 
 # ==============================================================================

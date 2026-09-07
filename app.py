@@ -30,6 +30,8 @@ import matplotlib
 # instead of trying to open a GUI window. Required for Streamlit compatibility.
 matplotlib.use("Agg")
 
+import datetime
+import json
 import matplotlib.pyplot as plt
 import pandas as pd
 import streamlit as st
@@ -50,6 +52,12 @@ from WiresharkAbnormality import (
     score_monitoring_window,
     PACKET_COLUMNS,
     WINDOW_FEATURE_COLS,
+    load_alerts,
+    save_alerts,
+    add_alert,
+    clear_alerts,
+    create_alert_record,
+    ALERTS_FILE,
 )
 
 
@@ -221,6 +229,69 @@ st.markdown(
     /* ── Sidebar tweaks ── */
     section[data-testid="stSidebar"] {
         background: #0d0d1a;
+    }
+
+    /* ── Incident Notification Card ── */
+    .alert-card {
+        background: #111122;
+        border: 1px solid rgba(255,255,255,0.08);
+        border-radius: 12px;
+        padding: 1.1rem 1.3rem;
+        margin-bottom: 0.9rem;
+        transition: transform 0.15s ease, border-color 0.15s ease;
+    }
+    .alert-card:hover {
+        border-color: rgba(255,255,255,0.18);
+        transform: translateY(-2px);
+    }
+    .alert-critical {
+        border-left: 4px solid #ef4444;
+    }
+    .alert-high {
+        border-left: 4px solid #f97316;
+    }
+    .alert-medium {
+        border-left: 4px solid #eab308;
+    }
+    .badge-critical {
+        background: rgba(239, 68, 68, 0.2);
+        color: #fca5a5;
+        border: 1px solid rgba(239, 68, 68, 0.4);
+        padding: 2px 8px;
+        border-radius: 6px;
+        font-size: 0.74rem;
+        font-weight: 700;
+        letter-spacing: 0.5px;
+    }
+    .badge-high {
+        background: rgba(249, 115, 22, 0.2);
+        color: #fdba74;
+        border: 1px solid rgba(249, 115, 22, 0.4);
+        padding: 2px 8px;
+        border-radius: 6px;
+        font-size: 0.74rem;
+        font-weight: 700;
+        letter-spacing: 0.5px;
+    }
+    .badge-medium {
+        background: rgba(234, 179, 8, 0.2);
+        color: #fde047;
+        border: 1px solid rgba(234, 179, 8, 0.4);
+        padding: 2px 8px;
+        border-radius: 6px;
+        font-size: 0.74rem;
+        font-weight: 700;
+        letter-spacing: 0.5px;
+    }
+    .soc-mitigation-box {
+        background: rgba(16, 185, 129, 0.08);
+        border: 1px solid rgba(16, 185, 129, 0.25);
+        border-radius: 8px;
+        padding: 0.6rem 0.9rem;
+        margin-top: 0.6rem;
+        font-size: 0.82rem;
+        color: #6ee7b7;
+        line-height: 1.45;
     }
     </style>
     """,
@@ -413,14 +484,18 @@ if uploaded_file is not None:
     )
 
 # ──────────────────────────────────────────────────────────────────────────────
-# TABS: Live Monitoring + Offline Forensic Layers
+# TABS: Live Monitoring + Offline Forensic Layers + Notification Center
 # ──────────────────────────────────────────────────────────────────────────────
 
-tab_live, tab1, tab2 = st.tabs(
+initial_alerts = load_alerts()
+alert_badge = f" ({len(initial_alerts)})" if initial_alerts else ""
+
+tab_live, tab1, tab2, tab_alerts = st.tabs(
     [
         "📡  Live Monitoring (Calibrate & Detect)",
         "📦  Per-Packet Analysis  (Layer 1 — offline)",
         "🪟  Per-Window Behavioral Analysis  (Layer 2 — offline)",
+        f"🔔  Incident Notification Center{alert_badge}",
     ]
 )
 
@@ -621,6 +696,21 @@ with tab_live:
                         rec = row.to_dict()
                         rec["timestamp_str"] = now_str
                         st.session_state.live_flagged_rows.append(rec)
+                        try:
+                            alt_rec = create_alert_record(
+                                src_address=row["Src_Address"],
+                                anomaly_type=row["Anomaly_Type"],
+                                packet_count=row["packet_count"],
+                                unique_dst_ports=row["unique_dst_ports"],
+                                unique_dst_ips=row.get("unique_dst_ips", 1),
+                                syn_count=row["syn_count"],
+                                avg_packet_length=row.get("avg_packet_length", 0.0),
+                                time_window=row.get("time_window"),
+                                origin=f"Live Surveillance ({live_interface or 'default'})",
+                            )
+                            add_alert(alt_rec)
+                        except Exception:
+                            pass
                         st.toast(
                             f"🚨 Anomaly Flagged: {row['Anomaly_Type']} from {row['Src_Address']}!",
                             icon="🚨",
@@ -922,13 +1012,263 @@ with tab2:
         styled = apply_anomaly_style(window_df, display_cols)
         st.dataframe(styled, use_container_width=True, height=340)
 
-        # Download
+        # Download & Log to Notification Center
         anomaly_win_df = window_df[window_df["Anomaly"] == -1]
         csv_win = anomaly_win_df.to_csv(index=False).encode("utf-8")
-        st.download_button(
-            label="⬇️  Download analyzed_capture_windows.csv",
-            data=csv_win,
-            file_name="analyzed_capture_windows.csv",
-            mime="text/csv",
+
+        col_dl, col_push = st.columns([1, 1])
+        with col_dl:
+            st.download_button(
+                label="⬇️  Download analyzed_capture_windows.csv",
+                data=csv_win,
+                file_name="analyzed_capture_windows.csv",
+                mime="text/csv",
+            )
+        with col_push:
+            if not anomaly_win_df.empty:
+                if st.button("🔔  Log Detected Threats to Notification Center", key="push_to_alerts_btn"):
+                    count_added = 0
+                    for _, a_row in anomaly_win_df.iterrows():
+                        a_rec = create_alert_record(
+                            src_address=a_row["Src_Address"],
+                            anomaly_type=a_row["Anomaly_Type"],
+                            packet_count=a_row["packet_count"],
+                            unique_dst_ports=a_row["unique_dst_ports"],
+                            unique_dst_ips=a_row.get("unique_dst_ips", 1),
+                            syn_count=a_row["syn_count"],
+                            avg_packet_length=a_row.get("avg_packet_length", 0.0),
+                            time_window=a_row.get("time_window"),
+                            origin=f"Offline PCAP ({uploaded_file.name if uploaded_file else 'uploaded'})",
+                        )
+                        add_alert(a_rec)
+                        count_added += 1
+                    st.success(f"✅ Added {count_added} threat incident(s) to the Notification Center!")
+                    time.sleep(0.8)
+                    st.rerun()
+
+
+# ┌─────────────────────────────────────────────────────────────────────────────┐
+# │ TAB 3 — Security Incident Notification Center & Audit Trail                 │
+# └─────────────────────────────────────────────────────────────────────────────┘
+
+with tab_alerts:
+    st.subheader("🔔 Security Incident Notification Center & SOC Audit Trail")
+    st.markdown(
+        """
+        Centralized Security Operations Center (SOC) incident repository. Automatically logs real-time
+        network attacks (Port Scans, Floods, DDoS) with mathematical anomaly scores, severity ratings,
+        and immediate firewall mitigation recommendations. Persistently saved to `alerts_history.json`.
+        """
+    )
+
+    alerts_list = load_alerts()
+
+    # ── KPI Metrics Row ────────────────────────────────────────────────────────
+    total_alerts = len(alerts_list)
+    crit_alerts = sum(1 for a in alerts_list if a.get("severity") == "CRITICAL")
+    high_alerts = sum(1 for a in alerts_list if a.get("severity") == "HIGH")
+    unique_attackers = len(set(a.get("src_address") for a in alerts_list if a.get("src_address")))
+
+    k1, k2, k3, k4 = st.columns(4)
+    k1.metric("Total Logged Incidents", total_alerts)
+    k2.metric("Critical Threats (Port Scans)", crit_alerts)
+    k3.metric("High Threats (Floods / DDoS)", high_alerts)
+    k4.metric("Unique Threat Actors", unique_attackers)
+
+    st.markdown("---")
+
+    # ── Action & Filter Toolbar ────────────────────────────────────────────────
+    col_f1, col_f2, col_act1, col_act2 = st.columns([1.5, 2, 2, 1.2])
+
+    with col_f1:
+        sev_filter = st.selectbox(
+            "Filter by Severity",
+            options=["All Severities", "CRITICAL", "HIGH", "MEDIUM"],
+            index=0,
         )
+
+    with col_f2:
+        ip_query = st.text_input("🔍 Search Attacker IP", placeholder="e.g. 10.0.2.15").strip()
+
+    with col_act1:
+        st.write("")
+        st.write("")
+        if st.button("🧪 Preload NMAP_PROBE Incidents", help="Populate authentic forensic attack incidents from NMAP_PROBE.pcap for instant demonstration"):
+            demo_events = [
+                {
+                    "src_address": "10.0.2.15",
+                    "anomaly_type": "Port Scan",
+                    "packet_count": 524,
+                    "unique_dst_ports": 491,
+                    "unique_dst_ips": 1,
+                    "syn_count": 491,
+                    "avg_packet_length": 60.0,
+                    "time_window": 1629118905.0,
+                    "origin": "Forensic PCAP (NMAP_PROBE.pcap)",
+                },
+                {
+                    "src_address": "10.0.2.15",
+                    "anomaly_type": "Port Scan",
+                    "packet_count": 587,
+                    "unique_dst_ports": 526,
+                    "unique_dst_ips": 1,
+                    "syn_count": 533,
+                    "avg_packet_length": 60.0,
+                    "time_window": 1629118910.0,
+                    "origin": "Forensic PCAP (NMAP_PROBE.pcap)",
+                },
+                {
+                    "src_address": "10.0.2.15",
+                    "anomaly_type": "Flood / DDoS",
+                    "packet_count": 1270,
+                    "unique_dst_ports": 6,
+                    "unique_dst_ips": 1,
+                    "syn_count": 313,
+                    "avg_packet_length": 54.0,
+                    "time_window": 1629119125.0,
+                    "origin": "Forensic PCAP (NMAP_PROBE.pcap)",
+                },
+                {
+                    "src_address": "10.0.2.15",
+                    "anomaly_type": "Flood / DDoS",
+                    "packet_count": 1938,
+                    "unique_dst_ports": 3,
+                    "unique_dst_ips": 1,
+                    "syn_count": 482,
+                    "avg_packet_length": 54.0,
+                    "time_window": 1629119130.0,
+                    "origin": "Forensic PCAP (NMAP_PROBE.pcap)",
+                },
+                {
+                    "src_address": "10.0.2.2",
+                    "anomaly_type": "Port Scan",
+                    "packet_count": 493,
+                    "unique_dst_ports": 486,
+                    "unique_dst_ips": 1,
+                    "syn_count": 0,
+                    "avg_packet_length": 54.0,
+                    "time_window": 1629118905.0,
+                    "origin": "Forensic PCAP (NMAP_PROBE.pcap)",
+                },
+                {
+                    "src_address": "10.0.2.2",
+                    "anomaly_type": "Flood / DDoS",
+                    "packet_count": 1934,
+                    "unique_dst_ports": 486,
+                    "unique_dst_ips": 1,
+                    "syn_count": 0,
+                    "avg_packet_length": 54.0,
+                    "time_window": 1629119130.0,
+                    "origin": "Forensic PCAP (NMAP_PROBE.pcap)",
+                },
+            ]
+            for ev in demo_events:
+                rec = create_alert_record(**ev)
+                add_alert(rec)
+            st.success("✅ Preloaded authentic attack incidents from NMAP_PROBE.pcap!")
+            time.sleep(0.6)
+            st.rerun()
+
+    with col_act2:
+        st.write("")
+        st.write("")
+        if st.button("🗑️ Clear All", help="Clear all stored incident notifications"):
+            clear_alerts()
+            st.warning("Cleared all alert history.")
+            time.sleep(0.5)
+            st.rerun()
+
+    # ── Filter Evaluation ──────────────────────────────────────────────────────
+    filtered_alerts = alerts_list
+    if sev_filter != "All Severities":
+        filtered_alerts = [a for a in filtered_alerts if a.get("severity") == sev_filter]
+    if ip_query:
+        filtered_alerts = [a for a in filtered_alerts if ip_query.lower() in str(a.get("src_address", "")).lower()]
+
+    # ── Export Buttons ─────────────────────────────────────────────────────────
+    if filtered_alerts:
+        df_export = pd.DataFrame(filtered_alerts)
+        csv_alerts = df_export.to_csv(index=False).encode("utf-8")
+        json_alerts = json.dumps(filtered_alerts, indent=2).encode("utf-8")
+
+        exp_col1, exp_col2, _ = st.columns([1.5, 1.5, 3])
+        with exp_col1:
+            st.download_button(
+                label="⬇️ Export Incident Audit Log (CSV)",
+                data=csv_alerts,
+                file_name="incident_audit_report.csv",
+                mime="text/csv",
+            )
+        with exp_col2:
+            st.download_button(
+                label="⬇️ Export Incident Audit Log (JSON)",
+                data=json_alerts,
+                file_name="incident_audit_report.json",
+                mime="application/json",
+            )
+
+    st.markdown("### 📋 Security Incident Feed")
+
+    if not filtered_alerts:
+        if alerts_list:
+            st.info("No incidents match your current search/severity filters.")
+        else:
+            st.info(
+                "No security incidents recorded yet. Launch **Live Monitoring** to detect live attacks, "
+                "or click **🧪 Preload NMAP_PROBE Incidents** above to demonstrate recorded threats."
+            )
+    else:
+        for alert in filtered_alerts:
+            sev = alert.get("severity", "MEDIUM")
+            card_class = (
+                "alert-critical" if sev == "CRITICAL"
+                else "alert-high" if sev == "HIGH"
+                else "alert-medium"
+            )
+            badge_class = (
+                "badge-critical" if sev == "CRITICAL"
+                else "badge-high" if sev == "HIGH"
+                else "badge-medium"
+            )
+            badge_icon = "🔴" if sev == "CRITICAL" else "🟠" if sev == "HIGH" else "🟡"
+
+            st.markdown(
+                f"""
+                <div class="alert-card {card_class}">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.6rem;">
+                        <div>
+                            <span class="{badge_class}">{badge_icon} {sev}</span>
+                            <span style="font-weight: 700; font-size: 1.05rem; color: #ffffff; margin-left: 0.6rem;">
+                                {alert.get('anomaly_type', 'Unknown Threat')}
+                            </span>
+                            <span style="font-size: 0.8rem; color: rgba(255,255,255,0.45); margin-left: 0.6rem;">
+                                ID: <code>{alert.get('id', 'ALT')}</code>
+                            </span>
+                        </div>
+                        <div style="font-size: 0.82rem; color: rgba(255,255,255,0.6);">
+                            🕒 {alert.get('timestamp', 'Unknown time')} &nbsp;|&nbsp; 📡 <i>{alert.get('origin', 'System')}</i>
+                        </div>
+                    </div>
+                    <div style="font-size: 0.88rem; color: rgba(255,255,255,0.85); margin-bottom: 0.5rem;">
+                        <b>Attacker Source IP:</b> <code class="val-orange" style="font-size: 0.95rem; font-weight: 600;">{alert.get('src_address', 'Unknown')}</code>
+                        &nbsp;&nbsp;•&nbsp;&nbsp;
+                        <b>Packets Transmitted:</b> <span class="val-blue">{alert.get('packet_count', 0):,}</span>
+                        &nbsp;&nbsp;•&nbsp;&nbsp;
+                        <b>Unique Target Ports:</b> <span class="val-danger">{alert.get('unique_dst_ports', 0):,}</span>
+                        &nbsp;&nbsp;•&nbsp;&nbsp;
+                        <b>TCP SYN Packets:</b> <span class="val-warn">{alert.get('syn_count', 0):,}</span>
+                        &nbsp;&nbsp;•&nbsp;&nbsp;
+                        <b>Avg Frame Size:</b> <span>{alert.get('avg_packet_length', 0):.1f} B</span>
+                    </div>
+                    <div style="font-size: 0.85rem; color: rgba(255,255,255,0.7); line-height: 1.45;">
+                        {alert.get('description', '')}
+                    </div>
+                    <div class="soc-mitigation-box">
+                        <b>🛡️ Recommended SOC Mitigation:</b> {alert.get('recommendation', 'Inspect endpoint network traffic.')}
+                    </div>
+                </div>
+                """,
+                unsafe_allow_html=True,
+            )
+
 

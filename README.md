@@ -113,6 +113,9 @@ Contains 9 columns:
 ### 3. `live_detected_anomalies.csv` (Live Monitoring Alerts)
 Exported from the Streamlit Live Monitoring tab, recording all real-time flagged windows with timestamps and behavioral signatures.
 
+### 4. `incident_audit_report.csv` & `alerts_history.json` (Security Operations Center Audit Trail)
+Exported from the **🔔 Incident Notification Center** tab. Provides a comprehensive persistent audit log of all historical security incidents, severity ratings (`CRITICAL`, `HIGH`, `MEDIUM`), mathematical threat signatures, and recommended firewall mitigation commands.
+
 ---
 
 ## Verification & Tests
