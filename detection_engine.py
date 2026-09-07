@@ -380,37 +380,58 @@ def detect_anomalies(data):
 
 def analyze_anomalies(data):
     """
-    [ORIGINAL — unchanged]
-    Print a human-readable text report of Layer 1 (per-packet) anomalies.
-    Used in command-line mode. The Streamlit dashboard renders this as a table.
+    Print a concise French grouped summary of Layer 1 (per-packet) anomalies.
+    Shows counts by category, top source IPs, and a short preview table.
+    Used in command-line mode. The Streamlit dashboard renders its own table.
     """
     anomalies = data[data["Anomaly"] == -1]
-    for index, row in anomalies.iterrows():
-        print(f"Abnormal Packet at Line {index + 1}:")
-        print(f"  Protocol: {row['Protocol']}")
-        print(f"  Length: {row['Length']} bytes")
-        print(f"  Source: {row['Src_Address']}:{row['Src_Port']}")
-        print(f"  Destination: {row['Dst_Address']}:{row['Dst_Port']}")
-        print(f"  Anomaly Type: {row['Anomaly_Type']}")
+    total = len(anomalies)
 
-        if row["Retransmission"]:
-            print("  Issue: Retransmission detected.")
-            print("  Tip: Check for network congestion or packet loss.")
-        if row["Reset_Flag"]:
-            print("  Issue: TCP Reset flag observed.")
-            print("  Tip: Verify application behavior and potential connection issues.")
-        if row["Anomaly_Type"] == "High Latency":
-            print("  Reason: Packet timing suggests unusually high latency.")
-            print("  Tip: Investigate potential network congestion or overloaded servers.")
-        if row["Anomaly_Type"] == "Unexpected Protocol":
-            print("  Reason: Detected protocol is unexpected or unknown.")
-            print(
-                "  Tip: Validate protocol usage and ensure no misconfigurations "
-                "or unauthorized traffic."
-            )
-        if row["Anomaly_Type"] == "Malformed Packet":
-            print("  Reason: Malformed packet with missing or invalid address information.")
-            print("  Tip: Inspect capture details for errors or corrupted data.")
+    if total == 0:
+        print("  Aucune anomalie de niveau paquet détectée.")
+        return
+
+    # ── Comptage par type d'anomalie ──────────────────────────────────────────
+    type_counts = anomalies["Anomaly_Type"].value_counts()
+
+    LABELS_FR = {
+        "Retransmission":     "Retransmissions TCP",
+        "High Latency":       "Latence élevée",
+        "Reset Flag":         "Réinitialisations TCP (RST)",
+        "Unexpected Protocol":"Protocoles inattendus",
+        "Malformed Packet":   "Paquets malformés",
+        "Other":              "Autres anomalies",
+    }
+
+    print(f"\n  {'Type d\'anomalie':<35} {'Paquets':>8}")
+    print(f"  {'-'*44}")
+    for atype, count in type_counts.items():
+        label = LABELS_FR.get(atype, atype)
+        print(f"  {label:<35} {count:>8,}")
+    print(f"  {'-'*44}")
+    print(f"  {'TOTAL anomalies (Couche 1)':<35} {total:>8,}")
+
+    # ── Top 5 sources les plus actives ────────────────────────────────────────
+    top_src = (
+        anomalies["Src_Address"]
+        .value_counts()
+        .head(5)
+    )
+    if not top_src.empty:
+        print(f"\n  Top sources suspectes :")
+        for ip, cnt in top_src.items():
+            bar = "█" * min(cnt // max(1, total // 20), 20)
+            print(f"    {ip:<25} {cnt:>5,} paquets  {bar}")
+
+    # ── Aperçu des 5 premiers paquets anormaux ────────────────────────────────
+    print(f"\n  Aperçu (5 premiers paquets anormaux) :")
+    print(f"  {'#':<6} {'Protocole':<10} {'Source':<28} {'Destination':<28} {'Type'}")
+    print(f"  {'-'*90}")
+    for i, (idx, row) in enumerate(anomalies.head(5).iterrows()):
+        src = f"{row['Src_Address']}:{row['Src_Port']}"
+        dst = f"{row['Dst_Address']}:{row['Dst_Port']}"
+        label = LABELS_FR.get(row["Anomaly_Type"], row["Anomaly_Type"])
+        print(f"  {idx+1:<6} {row['Protocol']:<10} {src:<28} {dst:<28} {label}")
 
 
 def plot_anomalies(data):
