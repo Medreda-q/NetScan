@@ -1,7 +1,7 @@
 """
-WiresharkAbnormality.py — Network Traffic Anomaly Detector
-===========================================================
-DUT Cybersecurity — Academic Soutenance Project
+detection_engine.py — Network Traffic Anomaly Detector
+======================================================
+DUT Cybersecurity — Stage d'Initiation (Septembre 2026)
 
 ARCHITECTURE OVERVIEW
 ---------------------
@@ -44,7 +44,7 @@ each environment's baseline traffic before initiating continuous surveillance.
 AUTHOR & COPYRIGHT
 ------------------
 Author: Mohamed Reda QIYAOUI
-DUT Cybersecurity — Soutenance Project 2026
+DUT Cybersecurity — Stage d'Initiation, Septembre 2026
 Copyright (c) 2026 Mohamed Reda QIYAOUI. All rights reserved.
 
 DEPENDENCIES
@@ -750,8 +750,8 @@ def _format_permission_error(interface=None, raw_error=""):
         f"             Verify the Npcap service is running ('net start npcap') and run your\n"
         f"             terminal or IDE as Administrator.\n"
         f"  • Linux / macOS: Run with root / sudo permissions:\n"
-        f"             sudo python WiresharkAbnormality.py\n"
-        f"             or sudo streamlit run app.py\n"
+        f"             sudo python detection_engine.py\n"
+        f"             or sudo streamlit run dashboard.py\n"
         f"{'='*75}\n"
     )
 
@@ -1259,7 +1259,7 @@ def clear_alerts(filepath=ALERTS_FILE):
 
 if __name__ == "__main__":
     print("=" * 65)
-    print("NetScan — Network Anomaly Detection System (DUT Soutenance 2026)")
+    print("NetScan — Network Anomaly Detection System (DUT Stage d'Initiation — Septembre 2026)")
     print("=" * 65)
     print("Select operational mode:")
     print("  [1] Live Capture & Monitoring (Phase 1 Calibration -> Phase 2 Detection)")

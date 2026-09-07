@@ -1,7 +1,7 @@
 """
-smoke_test.py — Verifies imports and detection logic without needing a .pcap file.
+test_smoke.py — Verifies imports and detection logic without needing a .pcap file.
 Author: Mohamed Reda QIYAOUI
-Run with: python smoke_test.py
+Run with: python test_smoke.py
 """
 import sys
 print("Python:", sys.version)
@@ -20,8 +20,8 @@ import pyshark
 print("    pyshark  [OK]")
 
 # ── 2. Import our own modules ─────────────────────────────────────────────────
-print("\n[2] Importing WiresharkAbnormality functions...")
-from WiresharkAbnormality import (
+print("\n[2] Importing detection_engine functions...")
+from detection_engine import (
     aggregate_windows,
     detect_window_anomalies,
 )

@@ -1,7 +1,7 @@
-# 🎓 GUIDE COMPLET DE SOUTENANCE — STAGE D'INITIATION (DUT / EST)
+# 🎓 GUIDE COMPLET DE SOUTENANCE — STAGE D'INITIATION (DUT Cybersécurité)
 **Projet : NetScan — Système de Détection d'Anomalies Réseau par Machine Learning**  
 **Étudiant : Mohamed Reda QIYAOUI**  
-**Date : Septembre 2026**
+**Date : Soutenance de Stage d'Initiation — Septembre 2026**
 
 ---
 
@@ -31,8 +31,8 @@
 
 ## 2. Structure Recommandée des Slides
 
-- **Slide 1 — Page de Garde** : Titre du projet (*NetScan*), Nom, Encadrants, Logo de l'établissement.
-- **Slide 2 — Contexte & Cadre du Stage** : Entreprise / Laboratoire d'accueil, objectifs du stage d'initiation.
+- **Slide 1 — Page de Garde** : Titre du projet (*NetScan*), Nom, Encadrant(s), Logo de l'établissement, mention **Stage d'Initiation** et date : *Septembre 2026*.
+- **Slide 2 — Contexte & Cadre du Stage d'Initiation** : Entreprise / service d'accueil, durée du stage, missions confiées.
 - **Slide 3 — La Problématique Réseau** : Pourquoi les pare-feux et IDS classiques (à signatures) échouent face aux scans furtifs (Nmap).
 - **Slide 4 — Objectifs du Projet NetScan** : Détecter sans signature grâce au Machine Learning non supervisé, en différé (.pcap) et en temps réel.
 - **Slide 5 — L'Architecture Dual-Layer (Le Cœur du Sujet)** :
@@ -42,7 +42,7 @@
 - **Slide 7 — Mode Temps Réel : Calibrate-Then-Monitor** : Phase 1 (Apprentissage du trafic normal pendant 2 min) $\rightarrow$ Phase 2 (Surveillance active continue).
 - **Slide 8 — Centre de Notification & Traçabilité SOC** : Historique persistant des incidents, sévérité, et recommandations firewall automatiques.
 - **Slide 9 — Démonstration de l'Outil (Streamlit)** : Transition vers la démo live ou captures d'écran annotées.
-- **Slide 10 — Compétences Acquises & Bilan Personnel** : Ce que le stage vous a apporté techniquement et professionnellement.
+- **Slide 10 — Compétences Acquises & Bilan du Stage d'Initiation** : Ce que le stage vous a apporté techniquement et professionnellement.
 - **Slide 11 — Perspectives d'Évolution** : Améliorations futures (réponse active IPS, notification Discord/Telegram, intégration SIEM).
 - **Slide 12 — Conclusion & Remerciements** : Synthèse finale et ouverture vers les questions du jury.
 
@@ -74,26 +74,26 @@
 
 ## 4. Scénario de Démonstration en Direct (3 Minutes Chrono)
 
-> 💡 **Règle d'or** : Lancez votre application **avant** de commencer à parler (`streamlit run app.py`). Laissez l'onglet prêt dans votre navigateur.
+> 💡 **Règle d'or** : Lancez votre application **avant** de commencer à parler (`streamlit run dashboard.py`). Laissez l'onglet prêt dans votre navigateur.
 
 ### Étape 1 : Montrer l'accueil & Charger l'échantillon (30 secondes)
 1. Ouvrez `http://localhost:8501`.
 2. Dans la barre latérale gauche, cliquez sur le bouton :  
-   👉 **`⚡ Load Demo Capture (NMAP_PROBE.pcap)`**
+   👉 **`⚡ Charger la Démo (Attaque Nmap)`**
 3. Montrez au jury le bandeau rouge qui apparaît :  
    *"Vous voyez ici que sur 11 614 paquets capturés, NetScan a instantanément identifié des fenêtres anormales."*
 
-### Étape 2 : L'onglet Comportemental (Layer 2) — L'effet "WAOUH" (1 minute)
-1. Cliquez sur l'onglet **`🪟 Per-Window Behavioral Analysis`**.
+### Étape 2 : L'onglet Comportemental (Niveau 2) — L'effet "WAOUH" (1 minute)
+1. Cliquez sur l'onglet **`🪟 Analyse Comportementale (Niveau 2)`**.
 2. Montrez le graphique de dispersion :
    - Le quadrant **en haut à gauche** (Beaucoup de ports uniques, volume modéré) : *"Voici la signature mathématique exacte du scan Nmap."*
    - Le quadrant **en bas à droite** : *"Ici, nous avons une tentative de Flood / Déni de service."*
-3. Déplacez le slider **Time window size** (ex: passez de 5s à 10s) :  
+3. Déplacez le slider **Taille de fenêtre** (ex: passez de 5s à 10s) :  
    *"Grâce au système de mise en cache que j'ai développé, le recalcul s'effectue en quelques millisecondes sans recharger le fichier."*
 
 ### Étape 3 : Le Centre de Notification SOC (1 minute)
-1. Cliquez sur le 4ème onglet **`🔔 Incident Notification Center`**.
-2. Si vous n'avez pas encore d'alertes, cliquez sur **`🧪 Preload NMAP_PROBE Incidents`**.
+1. Cliquez sur le 4ème onglet **`🔔 Centre d'Alertes`**.
+2. Si vous n'avez pas encore d'alertes, cliquez sur **`🧪 Charger Incidents Démo (Nmap)`**.
 3. Montrez une carte d'alerte rouge `CRITICAL` :
    *"L'outil identifie l'IP source `10.0.2.15`, précise qu'elle a scanné 526 ports en 5 secondes, et génère automatiquement la commande de mitigation firewall pour le SOC : `iptables -A INPUT -s 10.0.2.15 -j DROP`."*
 4. Montrez les boutons d'export CSV / JSON pour l'audit.
@@ -124,7 +124,7 @@
 > **Réponse** : *"PyShark est un wrapper au-dessus du moteur C de Wireshark (TShark), ce qui le rend rapide sur de très gros fichiers. Mais il nécessite une installation tierce. Scapy est 100% Python, extrêmement portable et autonome. Les combiner offre le meilleur des deux mondes : vitesse et résilience."*
 
 ### Q8 : "Avez-vous testé votre outil sur des attaques réelles ?"
-> **Réponse** : *"Oui, j'ai validé la détection sur la capture médico-légale `NMAP_PROBE.pcap` contenant un véritable scan SYN agressif lancé par l'outil Nmap. Les 4 fenêtres d'attaque ont été détectées avec 100% de succès par la Couche 2."*
+> **Réponse** : *"Oui, j'ai validé la détection sur la capture médico-légale `sample_nmap_attack.pcap` contenant un véritable scan SYN agressif lancé par l'outil Nmap. Les 4 fenêtres d'attaque ont été détectées avec 100% de succès par la Couche 2."*
 
 ### Q9 : "Qu'avez-vous appris durant ce stage d'initiation ?"
 > **Réponse** : *"Ce stage m'a permis d'approfondir l'analyse protocolaire TCP/IP, de maîtriser le traitement de données massives en Python avec Pandas, et d'appliquer concrètement l'intelligence artificielle à la résolution d'un problème réel de sécurité réseau, tout en concevant une interface utilisateur intuitive."*

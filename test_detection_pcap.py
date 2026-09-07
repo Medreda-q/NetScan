@@ -1,19 +1,20 @@
 """
-test_pcap_detection.py — End-to-end verification on NMAP_PROBE.pcap
+test_detection_pcap.py — End-to-end verification on sample_nmap_attack.pcap
 Author: Mohamed Reda QIYAOUI
+Run with: python test_detection_pcap.py
 """
 import os
 import sys
 import time
 
-from WiresharkAbnormality import (
+from detection_engine import (
     extract_features,
     detect_anomalies,
     aggregate_windows,
     detect_window_anomalies,
 )
 
-pcap_file = "NMAP_PROBE.pcap"
+pcap_file = "sample_nmap_attack.pcap" if os.path.exists("sample_nmap_attack.pcap") else "NMAP_PROBE.pcap"
 if not os.path.exists(pcap_file):
     print(f"Error: {pcap_file} not found!")
     sys.exit(1)

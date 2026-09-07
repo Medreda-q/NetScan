@@ -1,8 +1,8 @@
 """
-app.py — NetScan Streamlit Dashboard
-=====================================
+dashboard.py — NetScan Streamlit Dashboard
+=========================================
 Author: Mohamed Reda QIYAOUI
-DUT Cybersecurity Soutenance 2026
+DUT Cybersecurity — Stage d'Initiation, Septembre 2026
 
 Interactive front-end for the dual-layer network anomaly detection pipeline.
 
@@ -18,7 +18,7 @@ We use @st.cache_data on the pcap-parsing step so that:
 This means the demo slider is fast and responsive even on large captures.
 
 Run with:
-    streamlit run app.py
+    streamlit run dashboard.py
 """
 
 import asyncio
@@ -40,8 +40,8 @@ import streamlit as st
 if os.name == "nt":
     asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
 
-# Import our detection functions from the main script
-from WiresharkAbnormality import (
+# Import our detection functions from the detection engine
+from detection_engine import (
     extract_features,
     detect_anomalies,
     aggregate_windows,
@@ -305,12 +305,11 @@ st.markdown(
 st.markdown(
     """
     <div class="hero">
-        <div class="badge">🛡️ DUT Cybersecurity — Soutenance Project</div>
+        <div class="badge">🛡️ DUT — Stage d'Initiation Cybersécurité</div>
         <h1>NetScan — Network Anomaly Detector</h1>
         <p>
-            Dual-layer unsupervised ML pipeline: per-packet Isolation Forest (Length + Timestamp)
-            and time-windowed behavioral analysis (port diversity, packet volume, SYN flood signals).
-            Detects port scans, DDoS / flood attempts, and packet-level anomalies without predefined signatures.
+            Détection d'intrusions et anomalies réseau (Scans de ports, DDoS, paquets anormaux)
+            sans signatures préalables via Machine Learning non supervisé (Isolation Forest).
         </p>
     </div>
     """,
@@ -322,70 +321,45 @@ st.markdown(
 # ──────────────────────────────────────────────────────────────────────────────
 
 with st.sidebar:
-    st.markdown("## ⚙️ Controls")
+    st.markdown("## ⚙️ Configuration")
 
     uploaded_file = st.file_uploader(
-        "Upload a .pcap / .pcapng file",
+        "Fichier de capture (.pcap / .pcapng)",
         type=["pcap", "pcapng"],
-        help="Wireshark capture file to analyze",
+        help="Capture Wireshark à analyser",
     )
 
-    if os.path.exists("NMAP_PROBE.pcap"):
+    sample_pcap_name = "sample_nmap_attack.pcap" if os.path.exists("sample_nmap_attack.pcap") else ("NMAP_PROBE.pcap" if os.path.exists("NMAP_PROBE.pcap") else None)
+    if sample_pcap_name:
         if not st.session_state.get("use_sample_pcap"):
-            if st.button("⚡ Load Demo Capture (NMAP_PROBE.pcap)", use_container_width=True):
+            if st.button("⚡ Charger la Démo (Attaque Nmap)", use_container_width=True):
                 st.session_state["use_sample_pcap"] = True
                 st.rerun()
         else:
-            st.success("✅ `NMAP_PROBE.pcap` sample loaded")
-            if st.button("✖ Unload sample capture", use_container_width=True):
+            st.success(f"✅ Capture démo `{sample_pcap_name}` active")
+            if st.button("✖ Décharger la capture", use_container_width=True):
                 st.session_state["use_sample_pcap"] = False
                 st.rerun()
 
     st.markdown("---")
-    st.markdown("### 🪟 Window Settings")
+    st.markdown("### 🪟 Fenêtre Temporelle")
 
     window_size = st.slider(
-        "Time window size (seconds)",
+        "Taille de fenêtre (secondes)",
         min_value=1,
         max_value=30,
         value=5,
         step=1,
-        help=(
-            "Packets from the same source are grouped into buckets of this duration. "
-            "Small windows (1–3 s) catch fast, aggressive scans. "
-            "Large windows (15–30 s) catch slow, stealthy scans."
-        ),
-    )
-
-    st.markdown(
-        """
-        <div class="info-box">
-            <b>Demo tip:</b> drag the slider and watch the window scatter plot update
-            instantly — the pcap is parsed only <b>once</b> (cached), so changing the
-            window size re-runs only the fast aggregation step.
-        </div>
-        """,
-        unsafe_allow_html=True,
+        help="Regroupe les paquets par source sur cet intervalle pour analyser le comportement.",
     )
 
     st.markdown("---")
-    st.markdown("### 📐 Model Parameters")
-    st.caption("Layer 1 (per-packet): contamination = 0.05")
-    st.caption("Layer 2 (per-window): contamination = 0.10")
-    st.markdown(
-        """
-        <div class="info-box">
-            <b>Why different contamination?</b><br>
-            At packet level, ~5 % noise is a safe estimate for typical traffic.
-            At window level, a capture with an active scan might have 10–20 %
-            of windows that are malicious — so we use 10 % to avoid missing them.
-        </div>
-        """,
-        unsafe_allow_html=True,
-    )
+    st.markdown("### 📐 Paramètres IA")
+    st.caption("• **Niveau 1** (paquet) : contamination = 5%")
+    st.caption("• **Niveau 2** (fenêtre) : contamination = 10%")
 
     st.markdown("---")
-    st.caption("NetScan v2.0 • Author: Mohamed Reda QIYAOUI • Soutenance Oct 2026")
+    st.caption("NetScan v2.0 • Mohamed Reda QIYAOUI • Septembre 2026")
 
 # ──────────────────────────────────────────────────────────────────────────────
 # CACHED PCAP PARSING
@@ -442,10 +416,12 @@ active_filename = None
 if uploaded_file is not None:
     active_bytes = uploaded_file.getvalue()
     active_filename = uploaded_file.name
-elif st.session_state.get("use_sample_pcap") and os.path.exists("NMAP_PROBE.pcap"):
-    with open("NMAP_PROBE.pcap", "rb") as f:
-        active_bytes = f.read()
-    active_filename = "NMAP_PROBE.pcap (Demo Sample)"
+elif st.session_state.get("use_sample_pcap"):
+    sample_file = "sample_nmap_attack.pcap" if os.path.exists("sample_nmap_attack.pcap") else ("NMAP_PROBE.pcap" if os.path.exists("NMAP_PROBE.pcap") else None)
+    if sample_file:
+        with open(sample_file, "rb") as f:
+            active_bytes = f.read()
+        active_filename = f"{sample_file} (Demo Sample)"
 
 if active_bytes is not None:
     # Layer 1 — cached (runs only when a new file is uploaded)
@@ -469,35 +445,35 @@ if active_bytes is not None:
     banner_cls = "banner banner-safe" if is_safe else "banner banner-danger"
     status_icon = "✅" if is_safe else "🚨"
     status_msg = (
-        "No behavioral anomalies detected — capture appears clean"
+        "Trafic normal — Aucune menace détectée"
         if is_safe
-        else "Threats detected — review the Per-Window tab for details"
+        else "Menaces détectées — Consulter l'onglet Comportemental (Niveau 2)"
     )
 
     st.markdown(
         f"""
         <div class="{banner_cls}">
-            <h3>{status_icon} Offline Capture Analysis: {active_filename} — {status_msg}</h3>
+            <h3>{status_icon} Analyse : {active_filename} — {status_msg}</h3>
             <div class="chips">
                 <div class="chip">
                     <span class="val {'val-danger' if port_scans > 0 else 'val-safe'}">{port_scans}</span>
-                    <span class="lbl">Port Scan Windows</span>
+                    <span class="lbl">Scans de Ports</span>
                 </div>
                 <div class="chip">
                     <span class="val {'val-orange' if floods > 0 else 'val-safe'}">{floods}</span>
-                    <span class="lbl">Flood / DDoS Windows</span>
+                    <span class="lbl">Floods / DDoS</span>
                 </div>
                 <div class="chip">
                     <span class="val {'val-warn' if pkt_anomaly > 0 else 'val-safe'}">{pkt_anomaly:,}</span>
-                    <span class="lbl">Anomalous Packets</span>
+                    <span class="lbl">Paquets Anormaux</span>
                 </div>
                 <div class="chip">
                     <span class="val val-blue">{total_pkts:,}</span>
-                    <span class="lbl">Total Packets</span>
+                    <span class="lbl">Total Paquets</span>
                 </div>
                 <div class="chip">
                     <span class="val val-blue">{total_wins:,}</span>
-                    <span class="lbl">Time Windows ({window_size}s)</span>
+                    <span class="lbl">Fenêtres ({window_size}s)</span>
                 </div>
             </div>
         </div>
@@ -514,10 +490,10 @@ alert_badge = f" ({len(initial_alerts)})" if initial_alerts else ""
 
 tab_live, tab1, tab2, tab_alerts = st.tabs(
     [
-        "📡  Live Monitoring (Calibrate & Detect)",
-        "📦  Per-Packet Analysis  (Layer 1 — offline)",
-        "🪟  Per-Window Behavioral Analysis  (Layer 2 — offline)",
-        f"🔔  Incident Notification Center{alert_badge}",
+        "📡 Surveillance Temps Réel",
+        "📦 Analyse par Paquet (Niveau 1)",
+        "🪟 Analyse Comportementale (Niveau 2)",
+        f"🔔 Centre d'Alertes{alert_badge}",
     ]
 )
 
@@ -526,15 +502,9 @@ tab_live, tab1, tab2, tab_alerts = st.tabs(
 # └─────────────────────────────────────────────────────────────────────────────┘
 
 with tab_live:
-    st.subheader("Live Calibrate-Then-Monitor Network Surveillance")
-    st.markdown(
-        """
-        **Phase 1 — Calibration**: Sniffs live network traffic to establish this session's normal behavioral baseline
-        using an unsupervised Isolation Forest model (`contamination=0.10`).  
-        **Phase 2 — Continuous Monitoring**: Evaluates live traffic in sliding time windows against the
-        calibrated baseline and flags suspected Port Scans or Floods in real-time.  
-        *Note: Detection and reporting only — network traffic is NOT blocked or dropped.*
-        """
+    st.subheader("Surveillance Réseau en Temps Réel")
+    st.caption(
+        "Phase 1 : Calibration du profil normal (baseline) • Phase 2 : Détection continue des attaques (Scans, Floods)."
     )
 
     # Initialize session state tracking
@@ -556,43 +526,43 @@ with tab_live:
     c_iface, c_dur, c_win = st.columns([2, 1, 1])
     with c_iface:
         available_ifaces = get_available_interfaces()
-        iface_options = ["Default Interface"] + available_ifaces + ["Custom Interface..."]
+        iface_options = ["Interface par défaut"] + available_ifaces + ["Interface personnalisée..."]
         selected_option = st.selectbox(
-            "Network Interface",
+            "Interface Réseau",
             options=iface_options,
-            help="Select the network adapter to monitor.",
+            help="Sélectionnez l'adaptateur réseau à surveiller.",
         )
-        if selected_option == "Custom Interface...":
-            live_interface = st.text_input("Interface Name / Index:", value="eth0")
-        elif selected_option == "Default Interface":
+        if selected_option == "Interface personnalisée...":
+            live_interface = st.text_input("Nom de l'interface :", value="eth0")
+        elif selected_option == "Interface par défaut":
             live_interface = None
         else:
             live_interface = selected_option
 
     with c_dur:
         live_calib_duration = st.slider(
-            "Calibration Duration (s)",
+            "Durée Calibration (s)",
             min_value=10,
             max_value=300,
             value=120,
             step=5,
-            help="Time allocated for Phase 1 to learn normal traffic patterns.",
+            help="Temps alloué pour apprendre le profil normal du trafic.",
         )
 
     with c_win:
         live_window_size = st.slider(
-            "Monitoring Window (s)",
+            "Fenêtre d'Analyse (s)",
             min_value=1,
             max_value=30,
             value=5,
             step=1,
-            help="Evaluation window size for Phase 2 continuous scoring.",
+            help="Durée de chaque fenêtre pour évaluer le comportement en direct.",
         )
 
     col_btn1, col_btn2, _ = st.columns([1.2, 1.2, 3])
     with col_btn1:
         if not st.session_state.live_monitoring_active:
-            if st.button("🚀 Start Live Monitoring", type="primary", use_container_width=True):
+            if st.button("🚀 Lancer la Surveillance", type="primary", use_container_width=True):
                 st.session_state.live_monitoring_active = True
                 st.session_state.live_baseline_calibrated = False
                 st.session_state.live_flagged_rows = []
@@ -602,7 +572,7 @@ with tab_live:
 
     with col_btn2:
         if st.session_state.live_monitoring_active:
-            if st.button("⏹️ Stop Monitoring", use_container_width=True):
+            if st.button("⏹️ Arrêter", use_container_width=True):
                 st.session_state.live_monitoring_active = False
                 st.rerun()
 
@@ -632,7 +602,7 @@ with tab_live:
                     f"**Required Actions:**\n"
                     f"- **Windows**: Install [Npcap](https://npcap.com) with *'WinPcap API-compatible Mode'* enabled, "
                     f"ensure the driver service is running (`net start npcap`), and run your IDE/terminal as Administrator.\n"
-                    f"- **Linux / macOS**: Run with elevated permissions: `sudo streamlit run app.py`"
+                    f"- **Linux / macOS**: Run with elevated permissions: `sudo streamlit run dashboard.py`"
                 )
                 st.stop()
             except Exception as e:
@@ -789,20 +759,13 @@ with tab_live:
 # └─────────────────────────────────────────────────────────────────────────────┘
 
 with tab1:
-    st.subheader("Layer 1 — Per-Packet Anomaly Detection")
-
-    st.markdown(
-        """
-        **Model**: Isolation Forest on `Length` + `Timestamp` (contamination = 0.05)  
-        **What it finds**: individual packets that are statistically unusual in
-        size or timing — retransmissions, TCP resets, oversized frames, high-latency bursts.  
-        **What it misses**: port scans — every individual probe packet is normal-sized
-        and arrives at a plausible time. This gap is addressed in Layer 2 (next tab).
-        """
+    st.subheader("Niveau 1 — Analyse Microscopique (Par Paquet)")
+    st.caption(
+        "Détecte les paquets statistiquement anormaux : retransmissions excessives, paquets malformés, flags TCP suspects."
     )
 
     if active_bytes is None:
-        st.info("👆 Upload a **.pcap** file in the sidebar or click **'⚡ Load Demo Capture'** to run offline Layer 1 analysis.")
+        st.info("👆 Chargez une capture **.pcap** dans la barre latérale ou cliquez sur **'⚡ Charger la Démo'**.")
     else:
         col_plot, col_stats = st.columns([3, 1])
 
@@ -839,11 +802,11 @@ with tab1:
                 )
 
             ax1.set_title(
-                "Packet Length vs. Index  (Layer 1 — per-packet anomalies)",
+                "Taille des Paquets vs. Index  (Niveau 1 — anomalies individuelles)",
                 color="white", pad=12, fontsize=11,
             )
-            ax1.set_xlabel("Packet Index", color="#94a3b8")
-            ax1.set_ylabel("Packet Length (bytes)", color="#94a3b8")
+            ax1.set_xlabel("Index du Paquet", color="#94a3b8")
+            ax1.set_ylabel("Taille (octets)", color="#94a3b8")
             ax1.tick_params(colors="#94a3b8")
             for spine in ax1.spines.values():
                 spine.set_edgecolor("#1e293b")
@@ -858,29 +821,29 @@ with tab1:
 
         # ── Stats column ──────────────────────────────────────────────────────────
         with col_stats:
-            st.metric("Anomalous Packets", pkt_anomaly)
-            st.metric("Normal Packets", total_pkts - pkt_anomaly)
+            st.metric("Paquets Anormaux", pkt_anomaly)
+            st.metric("Paquets Normaux", total_pkts - pkt_anomaly)
             st.markdown("---")
 
             if pkt_anomaly > 0:
-                st.markdown("**Breakdown by type**")
+                st.markdown("**Types d'anomalies**")
                 type_counts = (
                     packet_df[packet_df["Anomaly"] == -1]["Anomaly_Type"]
                     .value_counts()
-                    .rename("Count")
+                    .rename("Total")
                 )
                 st.dataframe(type_counts, use_container_width=True)
             else:
-                st.success("No per-packet anomalies detected.")
+                st.success("Aucune anomalie par paquet détectée.")
 
         # ── Table ─────────────────────────────────────────────────────────────────
         st.markdown("---")
-        st.subheader("Flagged Packets")
+        st.subheader("📋 Liste des Paquets Anormaux")
 
         anomaly_pkt_df = packet_df[packet_df["Anomaly"] == -1].copy()
 
         if anomaly_pkt_df.empty:
-            st.info("No anomalous packets found.")
+            st.info("Aucun paquet anormal trouvé.")
         else:
             st.dataframe(
                 anomaly_pkt_df[
@@ -891,14 +854,14 @@ with tab1:
                     ]
                 ],
                 use_container_width=True,
-                height=320,
+                height=300,
             )
 
             csv_bytes = anomaly_pkt_df.to_csv(index=False).encode("utf-8")
             st.download_button(
-                label="⬇️  Download analyzed_capture_packets.csv",
+                label="⬇️ Exporter en CSV",
                 data=csv_bytes,
-                file_name="analyzed_capture_packets.csv",
+                file_name="paquets_anormaux.csv",
                 mime="text/csv",
             )
 
@@ -908,22 +871,13 @@ with tab1:
 # └─────────────────────────────────────────────────────────────────────────────┘
 
 with tab2:
-    st.subheader(f"Layer 2 — Windowed Behavioral Detection  (window = {window_size} s)")
-
-    st.markdown(
-        f"""
-        **Model**: Isolation Forest on 5 behavioral features aggregated per
-        *(source IP, {window_size}s window)* group (contamination = 0.10).  
-        **Features**: `packet_count`, `unique_dst_ports`, `unique_dst_ips`,
-        `syn_count`, `avg_packet_length`  
-        **Labels**: *Port Scan* (port diversity ratio > 0.5) · *Flood/DDoS* (high volume, concentrated target)  
-        **Key insight**: a port scanner contacts hundreds of unique ports in seconds —
-        invisible per-packet, obvious in aggregate.
-        """
+    st.subheader(f"Niveau 2 — Analyse Comportementale par Fenêtre ({window_size}s)")
+    st.caption(
+        "Détecte les attaques multi-paquets : Scans de ports (dispersion vers de multiples ports) et Floods / DDoS (volume anormal)."
     )
 
     if active_bytes is None:
-        st.info("👆 Upload a **.pcap** file in the sidebar or click **'⚡ Load Demo Capture'** to run offline Layer 2 behavioral analysis.")
+        st.info("👆 Chargez une capture **.pcap** dans la barre latérale ou cliquez sur **'⚡ Charger la Démo'**.")
     else:
         col_plot2, col_stats2 = st.columns([3, 1])
 
@@ -954,12 +908,12 @@ with tab2:
                 )
 
             ax2.set_title(
-                f"Behavioral Profile per Source / {window_size}s Window  (Layer 2)\n"
-                "X = packet volume · Y = port diversity · size ∝ avg packet length",
+                f"Profil Comportemental par Source / Fenêtre {window_size}s\n"
+                "Axe X = Volume de paquets · Axe Y = Diversité des ports cibles",
                 color="white", pad=12, fontsize=10,
             )
-            ax2.set_xlabel("Packet Count (per source per window)", color="#94a3b8")
-            ax2.set_ylabel("Unique Destination Ports", color="#94a3b8")
+            ax2.set_xlabel("Volume de Paquets (par source / fenêtre)", color="#94a3b8")
+            ax2.set_ylabel("Ports Cibles Uniques", color="#94a3b8")
             ax2.tick_params(colors="#94a3b8")
             for spine in ax2.spines.values():
                 spine.set_edgecolor("#1e293b")
@@ -974,13 +928,13 @@ with tab2:
 
         # ── Stats column ──────────────────────────────────────────────────────────
         with col_stats2:
-            st.metric("Total Windows", total_wins)
-            st.metric("Port Scan Windows", port_scans)
-            st.metric("Flood / DDoS Windows", floods)
+            st.metric("Total Fenêtres", total_wins)
+            st.metric("Scans de Ports", port_scans)
+            st.metric("Floods / DDoS", floods)
             st.markdown("---")
 
             if port_scans + floods > 0:
-                st.markdown("**Flagged source IPs**")
+                st.markdown("**IPs suspectes**")
                 flagged_srcs = (
                     window_df[window_df["Anomaly"] == -1]
                     .groupby(["Src_Address", "Anomaly_Type"])
@@ -991,64 +945,48 @@ with tab2:
                     )
                     .reset_index()
                 )
-                st.dataframe(flagged_srcs, use_container_width=True, height=220)
+                st.dataframe(flagged_srcs, use_container_width=True, height=200)
             else:
-                st.success("No behavioral anomalies detected.")
+                st.success("Aucune anomalie comportementale.")
 
-        # ── Explanation of axes ───────────────────────────────────────────────────
-        with st.expander("📖 How to read this plot (for the jury)"):
+        # ── Simplified Guide ───────────────────────────────────────────────────────
+        with st.expander("💡 Interprétation du graphique comportemental"):
             st.markdown(
                 """
-                Each point on the scatter represents **one source IP in one time window**
-                (e.g., IP `192.168.1.5` from second 10 to second 15).
-
-                | Quadrant | Interpretation |
-                |---|---|
-                | **Bottom-left** (low X, low Y) | Normal host — few packets, few ports |
-                | **Top-left** (low X, high Y) | **Port scan** — many unique ports, moderate volume (e.g. slow nmap) |
-                | **Bottom-right** (high X, low Y) | **Flood / DDoS** — high volume, concentrated target |
-                | **Top-right** (high X, high Y) | Aggressive scan + flood combined |
-
-                **Point size** is proportional to the average packet length in that window.
-                A large point in the flood quadrant suggests an **amplification attack**
-                (few targets, very large packets — e.g. DNS or NTP amplification).
-
-                **Why Isolation Forest?**
-                Isolation Forest randomly partitions the feature space. A port-scanning
-                source with 1,935 unique destination ports is trivially isolated from the
-                bulk of normal sources (which have 1–5 ports). The model assigns it an
-                anomaly score without needing any labelled attack data.
+                - **Bas-gauche** : Hôtes normaux (faible volume, peu de ports contactés).
+                - **Haut-gauche (Rouge)** : **Scan de ports** (dispersion sur de multiples ports — ex. Nmap).
+                - **Bas-droite (Orange)** : **Flood / DDoS** (volume massif vers une cible concentrée).
+                - **Taille des points** : Proportionnelle à la taille moyenne des paquets.
                 """
             )
 
         # ── Table ─────────────────────────────────────────────────────────────────
         st.markdown("---")
-        st.subheader("All Behavioral Window Profiles")
+        st.subheader("📋 Profils Comportementaux par Fenêtre")
 
         display_cols = [
             "Src_Address", "time_window", "packet_count", "unique_dst_ports",
             "unique_dst_ips", "syn_count", "avg_packet_length", "Anomaly_Type",
         ]
 
-        # Use safe apply_anomaly_style helper (Bug 4 fix: returns css and uses .map with fallback)
         styled = apply_anomaly_style(window_df, display_cols)
-        st.dataframe(styled, use_container_width=True, height=340)
+        st.dataframe(styled, use_container_width=True, height=300)
 
         # Download & Log to Notification Center
         anomaly_win_df = window_df[window_df["Anomaly"] == -1]
         csv_win = anomaly_win_df.to_csv(index=False).encode("utf-8")
 
-        col_dl, col_push = st.columns([1, 1])
+        col_dl, col_push = st.columns([1, 1.3])
         with col_dl:
             st.download_button(
-                label="⬇️  Download analyzed_capture_windows.csv",
+                label="⬇️ Exporter en CSV",
                 data=csv_win,
-                file_name="analyzed_capture_windows.csv",
+                file_name="fenetres_comportementales.csv",
                 mime="text/csv",
             )
         with col_push:
             if not anomaly_win_df.empty:
-                if st.button("🔔  Log Detected Threats to Notification Center", key="push_to_alerts_btn"):
+                if st.button("🔔 Enregistrer les alertes dans le Centre d'Alertes", key="push_to_alerts_btn"):
                     count_added = 0
                     for _, a_row in anomaly_win_df.iterrows():
                         a_rec = create_alert_record(
@@ -1060,11 +998,11 @@ with tab2:
                             syn_count=a_row["syn_count"],
                             avg_packet_length=a_row.get("avg_packet_length", 0.0),
                             time_window=a_row.get("time_window"),
-                            origin=f"Offline PCAP ({uploaded_file.name if uploaded_file else 'uploaded'})",
+                            origin=f"Capture (.pcap)",
                         )
                         add_alert(a_rec)
                         count_added += 1
-                    st.success(f"✅ Added {count_added} threat incident(s) to the Notification Center!")
+                    st.success(f"✅ {count_added} alerte(s) ajoutée(s) au Centre de Notifications !")
                     time.sleep(0.8)
                     st.rerun()
 
@@ -1092,10 +1030,10 @@ with tab_alerts:
     unique_attackers = len(set(a.get("src_address") for a in alerts_list if a.get("src_address")))
 
     k1, k2, k3, k4 = st.columns(4)
-    k1.metric("Total Logged Incidents", total_alerts)
-    k2.metric("Critical Threats (Port Scans)", crit_alerts)
-    k3.metric("High Threats (Floods / DDoS)", high_alerts)
-    k4.metric("Unique Threat Actors", unique_attackers)
+    k1.metric("Total Incidents", total_alerts)
+    k2.metric("Scans Critiques", crit_alerts)
+    k3.metric("Floods / DDoS", high_alerts)
+    k4.metric("IPs Attaquantes", unique_attackers)
 
     st.markdown("---")
 
@@ -1104,18 +1042,18 @@ with tab_alerts:
 
     with col_f1:
         sev_filter = st.selectbox(
-            "Filter by Severity",
-            options=["All Severities", "CRITICAL", "HIGH", "MEDIUM"],
+            "Gravité",
+            options=["Toutes", "CRITICAL", "HIGH", "MEDIUM"],
             index=0,
         )
 
     with col_f2:
-        ip_query = st.text_input("🔍 Search Attacker IP", placeholder="e.g. 10.0.2.15").strip()
+        ip_query = st.text_input("🔍 Rechercher une IP", placeholder="ex. 10.0.2.15").strip()
 
     with col_act1:
         st.write("")
         st.write("")
-        if st.button("🧪 Preload NMAP_PROBE Incidents", help="Populate authentic forensic attack incidents from NMAP_PROBE.pcap for instant demonstration"):
+        if st.button("🧪 Charger Incidents Démo (Nmap)", help="Préremplit des attaques réelles issues de NMAP_PROBE.pcap"):
             demo_events = [
                 {
                     "src_address": "10.0.2.15",
@@ -1126,7 +1064,7 @@ with tab_alerts:
                     "syn_count": 491,
                     "avg_packet_length": 60.0,
                     "time_window": 1629118905.0,
-                    "origin": "Forensic PCAP (NMAP_PROBE.pcap)",
+                    "origin": "Capture Démo (NMAP_PROBE.pcap)",
                 },
                 {
                     "src_address": "10.0.2.15",
@@ -1137,7 +1075,7 @@ with tab_alerts:
                     "syn_count": 533,
                     "avg_packet_length": 60.0,
                     "time_window": 1629118910.0,
-                    "origin": "Forensic PCAP (NMAP_PROBE.pcap)",
+                    "origin": "Capture Démo (NMAP_PROBE.pcap)",
                 },
                 {
                     "src_address": "10.0.2.15",
@@ -1148,7 +1086,7 @@ with tab_alerts:
                     "syn_count": 313,
                     "avg_packet_length": 54.0,
                     "time_window": 1629119125.0,
-                    "origin": "Forensic PCAP (NMAP_PROBE.pcap)",
+                    "origin": "Capture Démo (NMAP_PROBE.pcap)",
                 },
                 {
                     "src_address": "10.0.2.15",
@@ -1159,7 +1097,7 @@ with tab_alerts:
                     "syn_count": 482,
                     "avg_packet_length": 54.0,
                     "time_window": 1629119130.0,
-                    "origin": "Forensic PCAP (NMAP_PROBE.pcap)",
+                    "origin": "Capture Démo (NMAP_PROBE.pcap)",
                 },
                 {
                     "src_address": "10.0.2.2",
@@ -1170,7 +1108,7 @@ with tab_alerts:
                     "syn_count": 0,
                     "avg_packet_length": 54.0,
                     "time_window": 1629118905.0,
-                    "origin": "Forensic PCAP (NMAP_PROBE.pcap)",
+                    "origin": "Capture Démo (NMAP_PROBE.pcap)",
                 },
                 {
                     "src_address": "10.0.2.2",
@@ -1181,28 +1119,28 @@ with tab_alerts:
                     "syn_count": 0,
                     "avg_packet_length": 54.0,
                     "time_window": 1629119130.0,
-                    "origin": "Forensic PCAP (NMAP_PROBE.pcap)",
+                    "origin": "Capture Démo (NMAP_PROBE.pcap)",
                 },
             ]
             for ev in demo_events:
                 rec = create_alert_record(**ev)
                 add_alert(rec)
-            st.success("✅ Preloaded authentic attack incidents from NMAP_PROBE.pcap!")
+            st.success("✅ Incidents de démonstration préremplis !")
             time.sleep(0.6)
             st.rerun()
 
     with col_act2:
         st.write("")
         st.write("")
-        if st.button("🗑️ Clear All", help="Clear all stored incident notifications"):
+        if st.button("🗑️ Effacer tout", help="Effacer l'historique des alertes"):
             clear_alerts()
-            st.warning("Cleared all alert history.")
+            st.warning("Historique effacé.")
             time.sleep(0.5)
             st.rerun()
 
     # ── Filter Evaluation ──────────────────────────────────────────────────────
     filtered_alerts = alerts_list
-    if sev_filter != "All Severities":
+    if sev_filter != "Toutes":
         filtered_alerts = [a for a in filtered_alerts if a.get("severity") == sev_filter]
     if ip_query:
         filtered_alerts = [a for a in filtered_alerts if ip_query.lower() in str(a.get("src_address", "")).lower()]
@@ -1216,28 +1154,28 @@ with tab_alerts:
         exp_col1, exp_col2, _ = st.columns([1.5, 1.5, 3])
         with exp_col1:
             st.download_button(
-                label="⬇️ Export Incident Audit Log (CSV)",
+                label="⬇️ Exporter en CSV",
                 data=csv_alerts,
-                file_name="incident_audit_report.csv",
+                file_name="rapport_incidents.csv",
                 mime="text/csv",
             )
         with exp_col2:
             st.download_button(
-                label="⬇️ Export Incident Audit Log (JSON)",
+                label="⬇️ Exporter en JSON",
                 data=json_alerts,
-                file_name="incident_audit_report.json",
+                file_name="rapport_incidents.json",
                 mime="application/json",
             )
 
-    st.markdown("### 📋 Security Incident Feed")
+    st.markdown("### 📋 Flux des Incidents de Sécurité")
 
     if not filtered_alerts:
         if alerts_list:
-            st.info("No incidents match your current search/severity filters.")
+            st.info("Aucun incident ne correspond aux filtres de recherche.")
         else:
             st.info(
-                "No security incidents recorded yet. Launch **Live Monitoring** to detect live attacks, "
-                "or click **🧪 Preload NMAP_PROBE Incidents** above to demonstrate recorded threats."
+                "Aucun incident enregistré pour le moment. Lancez la **Surveillance Temps Réel** "
+                "ou cliquez sur **🧪 Charger Incidents Démo (Nmap)** ci-dessus pour afficher des menaces enregistrées."
             )
     else:
         for alert in filtered_alerts:
@@ -1261,32 +1199,32 @@ with tab_alerts:
                         <div>
                             <span class="{badge_class}">{badge_icon} {sev}</span>
                             <span style="font-weight: 700; font-size: 1.05rem; color: #ffffff; margin-left: 0.6rem;">
-                                {alert.get('anomaly_type', 'Unknown Threat')}
+                                {alert.get('anomaly_type', 'Attaque Inconnue')}
                             </span>
                             <span style="font-size: 0.8rem; color: rgba(255,255,255,0.45); margin-left: 0.6rem;">
                                 ID: <code>{alert.get('id', 'ALT')}</code>
                             </span>
                         </div>
                         <div style="font-size: 0.82rem; color: rgba(255,255,255,0.6);">
-                            🕒 {alert.get('timestamp', 'Unknown time')} &nbsp;|&nbsp; 📡 <i>{alert.get('origin', 'System')}</i>
+                            🕒 {alert.get('timestamp', 'Inconnu')} &nbsp;|&nbsp; 📡 <i>{alert.get('origin', 'Système')}</i>
                         </div>
                     </div>
                     <div style="font-size: 0.88rem; color: rgba(255,255,255,0.85); margin-bottom: 0.5rem;">
-                        <b>Attacker Source IP:</b> <code class="val-orange" style="font-size: 0.95rem; font-weight: 600;">{alert.get('src_address', 'Unknown')}</code>
+                        <b>IP Source :</b> <code class="val-orange" style="font-size: 0.95rem; font-weight: 600;">{alert.get('src_address', 'Inconnu')}</code>
                         &nbsp;&nbsp;•&nbsp;&nbsp;
-                        <b>Packets Transmitted:</b> <span class="val-blue">{alert.get('packet_count', 0):,}</span>
+                        <b>Paquets :</b> <span class="val-blue">{alert.get('packet_count', 0):,}</span>
                         &nbsp;&nbsp;•&nbsp;&nbsp;
-                        <b>Unique Target Ports:</b> <span class="val-danger">{alert.get('unique_dst_ports', 0):,}</span>
+                        <b>Ports Cibles :</b> <span class="val-danger">{alert.get('unique_dst_ports', 0):,}</span>
                         &nbsp;&nbsp;•&nbsp;&nbsp;
-                        <b>TCP SYN Packets:</b> <span class="val-warn">{alert.get('syn_count', 0):,}</span>
+                        <b>Paquets SYN :</b> <span class="val-warn">{alert.get('syn_count', 0):,}</span>
                         &nbsp;&nbsp;•&nbsp;&nbsp;
-                        <b>Avg Frame Size:</b> <span>{alert.get('avg_packet_length', 0):.1f} B</span>
+                        <b>Taille Moy. :</b> <span>{alert.get('avg_packet_length', 0):.1f} B</span>
                     </div>
                     <div style="font-size: 0.85rem; color: rgba(255,255,255,0.7); line-height: 1.45;">
                         {alert.get('description', '')}
                     </div>
                     <div class="soc-mitigation-box">
-                        <b>🛡️ Recommended SOC Mitigation:</b> {alert.get('recommendation', 'Inspect endpoint network traffic.')}
+                        <b>🛡️ Remédiation Pare-Feu Recommandée :</b> {alert.get('recommendation', 'Inspecter le trafic de la machine.')}
                     </div>
                 </div>
                 """,

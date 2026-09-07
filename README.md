@@ -1,6 +1,6 @@
 # NetScan — Network Anomaly Detection and Analysis
 
-NetScan is an unsupervised machine learning network intrusion and anomaly detection platform developed by **Mohamed Reda QIYAOUI** for the DUT Cybersecurity soutenance project. It combines offline `.pcap` forensic inspection with a live **Calibrate-Then-Monitor** surveillance mode to detect microscopic packet malformations and macroscopic multi-host attacks (such as stealth TCP SYN port scans and volumetric DDoS floods).
+NetScan is an unsupervised machine learning network intrusion and anomaly detection platform developed by **Mohamed Reda QIYAOUI** as part of a **DUT Cybersecurity Stage d'Initiation** (Septembre 2026). It combines offline `.pcap` forensic inspection with a live **Calibrate-Then-Monitor** surveillance mode to detect microscopic packet malformations and macroscopic multi-host attacks (such as stealth TCP SYN port scans and volumetric DDoS floods).
 
 ---
 
@@ -52,7 +52,7 @@ NetScan operates across three complementary detection tiers:
 ### Live Capture Driver Requirements
 Packet sniffing on live network interfaces requires elevated privileges:
 - **Windows**: Install [Npcap](https://npcap.com) with the option **"Install Npcap in WinPcap API-compatible Mode"** enabled. Ensure the driver service is running (`net start npcap`), and run your terminal or IDE as **Administrator**.
-- **Linux / macOS**: Run scripts with elevated permissions (`sudo python WiresharkAbnormality.py` or `sudo streamlit run app.py`).
+- **Linux / macOS**: Run scripts with elevated permissions (`sudo python detection_engine.py` or `sudo streamlit run dashboard.py`).
 
 ---
 
@@ -61,7 +61,7 @@ Packet sniffing on live network interfaces requires elevated privileges:
 ### 1. Interactive Streamlit Dashboard (Recommended)
 Launch the web interface:
 ```bash
-streamlit run app.py
+streamlit run dashboard.py
 ```
 The dashboard features three tabs:
 - **📡 Live Monitoring**: Select a network adapter, tune calibration duration and window size, start live surveillance, and observe real-time countdowns and anomaly logs.
@@ -71,11 +71,11 @@ The dashboard features three tabs:
 ### 2. Command-Line Interface (CLI)
 Run the core detection script:
 ```bash
-python WiresharkAbnormality.py
+python detection_engine.py
 ```
 You will be prompted to select an operational mode:
 - **Option [1] — Live Capture & Monitoring**: Prompts for network interface name, calibration duration (seconds), and window size (seconds). Runs Phase 1 calibration followed by continuous Phase 2 monitoring with real-time alerts.
-- **Option [2] — File Analysis Mode**: Prompts for path to an offline `.pcap` capture file (e.g. `NMAP_PROBE.pcap`) and window size, executing full Layer 1 & Layer 2 offline forensics.
+- **Option [2] — File Analysis Mode**: Prompts for path to an offline `.pcap` capture file (e.g. `sample_nmap_attack.pcap`) and window size, executing full Layer 1 & Layer 2 offline forensics.
 
 ---
 
@@ -123,18 +123,15 @@ Exported from the **🔔 Incident Notification Center** tab. Provides a comprehe
 Run the included validation suites:
 ```bash
 # Verify imports, synthetic detection, and aggregation logic
-python smoke_test.py
+python test_smoke.py
 
-# Verify end-to-end detection on authentic forensic capture (NMAP_PROBE.pcap)
-python test_pcap_detection.py
-
-# Verify live calibration and monitoring logic with synthetic packet streams
-python scratch/test_live_logic.py
+# Verify end-to-end detection on authentic forensic capture (sample_nmap_attack.pcap)
+python test_detection_pcap.py
 ```
 
 ## Author & Copyright
 
 - **Author**: Mohamed Reda QIYAOUI
-- **Project**: DUT Cybersecurity Soutenance (October 2026)
+- **Project**: DUT Cybersecurity — Stage d'Initiation (Septembre 2026)
 - **License**: MIT License. Copyright © 2026 Mohamed Reda QIYAOUI. All rights reserved.
 
