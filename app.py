@@ -330,6 +330,17 @@ with st.sidebar:
         help="Wireshark capture file to analyze",
     )
 
+    if os.path.exists("NMAP_PROBE.pcap"):
+        if not st.session_state.get("use_sample_pcap"):
+            if st.button("⚡ Load Demo Capture (NMAP_PROBE.pcap)", use_container_width=True):
+                st.session_state["use_sample_pcap"] = True
+                st.rerun()
+        else:
+            st.success("✅ `NMAP_PROBE.pcap` sample loaded")
+            if st.button("✖ Unload sample capture", use_container_width=True):
+                st.session_state["use_sample_pcap"] = False
+                st.rerun()
+
     st.markdown("---")
     st.markdown("### 🪟 Window Settings")
 
@@ -425,9 +436,20 @@ def load_and_detect_packets(file_bytes: bytes, _filename: str) -> pd.DataFrame:
 packet_df = None
 window_df = None
 
+active_bytes = None
+active_filename = None
+
 if uploaded_file is not None:
+    active_bytes = uploaded_file.getvalue()
+    active_filename = uploaded_file.name
+elif st.session_state.get("use_sample_pcap") and os.path.exists("NMAP_PROBE.pcap"):
+    with open("NMAP_PROBE.pcap", "rb") as f:
+        active_bytes = f.read()
+    active_filename = "NMAP_PROBE.pcap (Demo Sample)"
+
+if active_bytes is not None:
     # Layer 1 — cached (runs only when a new file is uploaded)
-    packet_df = load_and_detect_packets(uploaded_file.getvalue(), uploaded_file.name)
+    packet_df = load_and_detect_packets(active_bytes, active_filename)
 
     # Layer 2 — fast (runs every time window_size slider changes)
     with st.spinner(
@@ -455,7 +477,7 @@ if uploaded_file is not None:
     st.markdown(
         f"""
         <div class="{banner_cls}">
-            <h3>{status_icon} Offline Capture Analysis: {uploaded_file.name} — {status_msg}</h3>
+            <h3>{status_icon} Offline Capture Analysis: {active_filename} — {status_msg}</h3>
             <div class="chips">
                 <div class="chip">
                     <span class="val {'val-danger' if port_scans > 0 else 'val-safe'}">{port_scans}</span>
@@ -779,8 +801,8 @@ with tab1:
         """
     )
 
-    if uploaded_file is None:
-        st.info("👆 Upload a **.pcap** file in the sidebar to run offline Layer 1 analysis.")
+    if active_bytes is None:
+        st.info("👆 Upload a **.pcap** file in the sidebar or click **'⚡ Load Demo Capture'** to run offline Layer 1 analysis.")
     else:
         col_plot, col_stats = st.columns([3, 1])
 
@@ -900,8 +922,8 @@ with tab2:
         """
     )
 
-    if uploaded_file is None:
-        st.info("👆 Upload a **.pcap** file in the sidebar to run offline Layer 2 behavioral analysis.")
+    if active_bytes is None:
+        st.info("👆 Upload a **.pcap** file in the sidebar or click **'⚡ Load Demo Capture'** to run offline Layer 2 behavioral analysis.")
     else:
         col_plot2, col_stats2 = st.columns([3, 1])
 
