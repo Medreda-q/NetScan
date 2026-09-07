@@ -78,22 +78,23 @@
 
 ### Étape 1 : Montrer l'accueil & Charger l'échantillon (30 secondes)
 1. Ouvrez `http://localhost:8501`.
-2. Dans la barre latérale gauche, cliquez sur le bouton :  
-   👉 **`⚡ Charger la Démo (Attaque Nmap)`**
-3. Montrez au jury le bandeau rouge qui apparaît :  
-   *"Vous voyez ici que sur 11 614 paquets capturés, NetScan a instantanément identifié des fenêtres anormales."*
+2. Présentez les **deux modes principaux** en haut de l'écran :
+   - **`Analyse de Capture (Fichier PCAP)`** (Forensic & Graphiques)
+   - **`Surveillance Réseau en Direct (Live)`** (Sniffing d'interface & Détection continue)
+3. Glissez-déposez le fichier de capture de test (`sample_nmap_attack.pcap`) dans la zone d'importation. Le bandeau d'alerte rouge apparaît aussitôt :  
+   *"Dès l'importation de cette capture de 11 614 paquets, NetScan analyse le trafic et isole instantanément les attaques sans signatures préalables."*
 
 ### Étape 2 : L'onglet Comportemental (Niveau 2) — L'effet "WAOUH" (1 minute)
-1. Cliquez sur l'onglet **`🪟 Analyse Comportementale (Niveau 2)`**.
+1. Cliquez sur l'onglet **`Analyse Comportementale (Niveau 2)`**.
 2. Montrez le graphique de dispersion :
    - Le quadrant **en haut à gauche** (Beaucoup de ports uniques, volume modéré) : *"Voici la signature mathématique exacte du scan Nmap."*
    - Le quadrant **en bas à droite** : *"Ici, nous avons une tentative de Flood / Déni de service."*
-3. Déplacez le slider **Taille de fenêtre** (ex: passez de 5s à 10s) :  
-   *"Grâce au système de mise en cache que j'ai développé, le recalcul s'effectue en quelques millisecondes sans recharger le fichier."*
+3. Expliquez la standardisation de la fenêtre temporelle (5 secondes) :  
+   *"L'analyse regroupe le trafic par fenêtres optimales de 5 secondes, ce qui isole précisément les rafales de sondes Nmap et les pics de volume."*
 
 ### Étape 3 : Le Centre de Notification SOC (1 minute)
-1. Cliquez sur le 4ème onglet **`🔔 Centre d'Alertes`**.
-2. Si vous n'avez pas encore d'alertes, cliquez sur **`🧪 Charger Incidents Démo (Nmap)`**.
+1. Cliquez sur le 4ème onglet **`Centre d'Alertes`**.
+2. Si vous n'avez pas encore d'alertes, cliquez sur **`Charger Incidents Démo (Nmap)`**.
 3. Montrez une carte d'alerte rouge `CRITICAL` :
    *"L'outil identifie l'IP source `10.0.2.15`, précise qu'elle a scanné 526 ports en 5 secondes, et génère automatiquement la commande de mitigation firewall pour le SOC : `iptables -A INPUT -s 10.0.2.15 -j DROP`."*
 4. Montrez les boutons d'export CSV / JSON pour l'audit.
