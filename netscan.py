@@ -313,9 +313,9 @@ def action_pcap_forensics(pcap_path=None):
     print(f"{Colors.CYAN}[5] Détection des anomalies comportementales fenêtrées (Couche 2)...{Colors.RESET}")
     window_results = detect_window_anomalies(window_df)
 
-    port_scans = (window_results["Anomaly_Type"] == "Port Scan").sum()
-    floods = (window_results["Anomaly_Type"] == "Flood / DDoS").sum()
-    pkt_anomalies = (analyzed_data["Anomaly"] == -1).sum()
+    port_scans = int((window_results["Anomaly_Type"] == "Port Scan").sum())
+    floods     = int((window_results["Anomaly_Type"] == "Flood / DDoS").sum())
+    pkt_anomalies = int((analyzed_data["Anomaly"] == -1).sum())
 
     print(f"\n{Colors.BOLD}{'='*60}")
     print(f"RÉSUMÉ DE L'ANALYSE FORENSIQUE")
@@ -324,7 +324,28 @@ def action_pcap_forensics(pcap_path=None):
     print(f"  Anomalies par paquet       : {pkt_anomalies:,}  (Couche 1)")
     print(f"  Fenêtres — Scan de ports   : {port_scans:,}  (Couche 2 — fenêtre {window_size}s)")
     print(f"  Fenêtres — Flood / DDoS    : {floods:,}  (Couche 2 — fenêtre {window_size}s)")
-    print(f"{'='*60}\n")
+    print(f"{'='*60}")
+
+    # ── Proposition de générer le rapport ────────────────────────────────────
+    gen = input(f"\n{Colors.BOLD}Voulez-vous générer le rapport d'incident forensique (HTML/PDF) ? [O/n] : {Colors.RESET}").strip().lower()
+    if gen in ("", "o", "oui", "y", "yes"):
+        from report_generator import generate_html_incident_report
+        anomalous_windows = window_results[window_results["Anomaly_Type"].isin(["Port Scan", "Flood / DDoS"])]
+        stats = {
+            "total_packets":        len(analyzed_data),
+            "total_windows":        len(window_results),
+            "port_scan_count":      port_scans,
+            "flood_count":          floods,
+            "packet_anomaly_count": pkt_anomalies,
+            "source_target":        os.path.basename(pcap_path),
+        }
+        html = generate_html_incident_report(session_stats=stats, anomalous_windows=anomalous_windows)
+        out_file = f"rapport_incident_{os.path.splitext(os.path.basename(pcap_path))[0]}.html"
+        with open(out_file, "w", encoding="utf-8") as f:
+            f.write(html)
+        print(f"\n{Colors.GREEN}[+] Rapport généré : {out_file}{Colors.RESET}")
+        print(f"{Colors.CYAN}[*] Ouvrez ce fichier dans votre navigateur → Fichier → Imprimer → Enregistrer en PDF.{Colors.RESET}")
+    print()
 
 
 def action_launch_dashboard():
@@ -372,34 +393,6 @@ def action_test_discord():
         print(f"{Colors.YELLOW}[!] Aucune URL de webhook configurée.{Colors.RESET}")
 
 
-def action_generate_report():
-    """Generate executive incident report from terminal."""
-    from report_generator import generate_html_incident_report
-    from detection_engine import load_alerts
-
-    alerts = load_alerts()
-
-    stats = {
-        "total_packets": sum(a.get("packet_count", 0) for a in alerts),
-        "total_windows": len(alerts),
-        "port_scan_count": sum(1 for a in alerts if a.get("anomaly_type") == "Port Scan"),
-        "flood_count": sum(1 for a in alerts if a.get("anomaly_type") == "Flood / DDoS"),
-        "packet_anomaly_count": len(alerts),
-        "source_target": "Session Terminal NetScan",
-    }
-
-    html = generate_html_incident_report(
-        session_stats=stats,
-        anomalous_windows=alerts,
-    )
-
-    out_file = "rapport_incident_netscan.html"
-    with open(out_file, "w", encoding="utf-8") as f:
-        f.write(html)
-
-    print(f"\n{Colors.GREEN}[+] Rapport exécutif généré avec succès dans : {out_file}{Colors.RESET}")
-    print(f"{Colors.CYAN}[*] Vous pouvez ouvrir ce fichier dans votre navigateur et l'enregistrer en PDF.{Colors.RESET}")
-
 
 # ==============================================================================
 # MAIN INTERACTIVE LOOP
@@ -441,11 +434,10 @@ def main():
         print(f"\n{Colors.BOLD}Sélectionnez un mode opérationnel :{Colors.RESET}")
         print(f"  {Colors.GREEN}[1]{Colors.RESET} Surveillance en Direct (Calibration → Monitoring)")
         print(f"  {Colors.GREEN}[2]{Colors.RESET} Analyse Forensique PCAP Hors Ligne (Couche 1 & Couche 2)")
+        print(f"         {Colors.DIM}↳ Un rapport HTML/PDF vous sera proposé à la fin de l'analyse{Colors.RESET}")
         print(f"  {Colors.GREEN}[3]{Colors.RESET} Lancer le Tableau de Bord Web Interactif (Streamlit)")
         print(f"  {Colors.GREEN}[4]{Colors.RESET} Exécuter les Diagnostics Système & Tests")
-        print(f"  {Colors.GREEN}[5]{Colors.RESET} Vérifier / Installer les Pilotes de Capture Réseau")
-        print(f"  {Colors.GREEN}[6]{Colors.RESET} Tester les Alertes Webhook Discord")
-        print(f"  {Colors.GREEN}[7]{Colors.RESET} Générer le Rapport d'Incident Forensique (PDF/HTML)")
+        print(f"  {Colors.GREEN}[5]{Colors.RESET} Tester les Alertes Webhook Discord")
         print(f"  {Colors.RED}[0]{Colors.RESET} Quitter")
 
         choice = input(f"\n{Colors.BOLD}netscan > {Colors.RESET}").strip()
@@ -459,16 +451,12 @@ def main():
         elif choice == "4":
             action_run_diagnostics()
         elif choice == "5":
-            check_driver_health(verbose=True)
-        elif choice == "6":
             action_test_discord()
-        elif choice == "7":
-            action_generate_report()
         elif choice in ("0", "exit", "quit", "q"):
             print(f"\n{Colors.CYAN}Au revoir !{Colors.RESET}")
             break
         else:
-            print(f"{Colors.YELLOW}[!] Option invalide. Veuillez choisir entre 0 et 7.{Colors.RESET}")
+            print(f"{Colors.YELLOW}[!] Option invalide. Veuillez choisir entre 0 et 5.{Colors.RESET}")
 
 
 
