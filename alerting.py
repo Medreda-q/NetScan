@@ -1,24 +1,26 @@
 """
-NetScan — Alerting & SIEM Integration Module
+NetScan — Security Audit Logging & Incident Management Module
 DUT Cybersecurity Stage d'Initiation (Septembre 2026)
 Author: Mohamed Reda QIYAOUI
 
-Provides real-time webhook notifications (Discord / Slack) with rich embeds.
+Provides persistent local audit logging for all detected intrusion attempts
+(Port Scans, SYN Floods, Anomalies) and generates defensive firewall rules.
 """
 
 import json
 import os
-import urllib.request
-import urllib.error
+import sys
 from datetime import datetime
 
+AUDIT_LOG_FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)), "alerts_history.json")
 CONFIG_FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)), "config.json")
 
 
 def load_config():
-    """Load persistent configuration (webhook URLs)."""
+    """Load persistent configuration."""
     default_config = {
-        "discord_webhook_url": "",
+        "log_file": "alerts_history.json",
+        "auto_firewall_rule": True,
     }
     if os.path.exists(CONFIG_FILE):
         try:
@@ -40,124 +42,106 @@ def save_config(config_dict):
         return False
 
 
+def generate_firewall_rule(src_ip, os_type="windows"):
+    """
+    Generate an immediate kernel firewall blocking command for an offending IP.
+    """
+    if not src_ip or src_ip in ("Unknown", "127.0.0.1", "localhost"):
+        return "# IP non spécifiée"
+    
+    clean_ip = src_ip.split()[0].strip()
+    if os_type == "windows" or os.name == "nt":
+        return f'netsh advfirewall firewall add rule name="NetScan-Block-{clean_ip}" dir=in action=block remoteip={clean_ip}'
+    else:
+        return f'iptables -A INPUT -s {clean_ip} -j DROP'
+
+
+def log_security_event(alert_data, filepath=AUDIT_LOG_FILE):
+    """
+    Persistently logs a security incident into the local audit trail.
+    """
+    events = load_security_events(filepath)
+    
+    timestamp = alert_data.get("timestamp") or datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    record = {
+        "timestamp": timestamp,
+        "anomaly_type": alert_data.get("anomaly_type", "Anomalie Réseau"),
+        "src_address": alert_data.get("src_ip") or alert_data.get("src_address", "Inconnue"),
+        "packet_count": int(alert_data.get("packet_count", 0)),
+        "unique_dst_ports": int(alert_data.get("unique_ports") or alert_data.get("unique_dst_ports", 0)),
+        "severity": alert_data.get("severity", "HIGH"),
+        "firewall_rule": generate_firewall_rule(alert_data.get("src_ip") or alert_data.get("src_address", "")),
+    }
+
+    # Avoid immediate exact duplicates within the same second
+    for ev in events[:10]:
+        if (ev.get("src_address") == record["src_address"] and
+            ev.get("anomaly_type") == record["anomaly_type"] and
+            ev.get("timestamp") == record["timestamp"]):
+            return True, "Événement déjà consigné dans le journal."
+
+    events.insert(0, record)
+    events = events[:1000]  # Cap at 1000 entries
+    
+    try:
+        tmp_file = f"{filepath}.tmp"
+        with open(tmp_file, "w", encoding="utf-8") as f:
+            json.dump(events, f, indent=2, ensure_ascii=False)
+        if os.path.exists(filepath):
+            os.replace(tmp_file, filepath)
+        else:
+            os.rename(tmp_file, filepath)
+        return True, "Événement consigné dans le journal d'audit local."
+    except Exception as e:
+        return False, f"Erreur d'écriture du journal d'audit: {e}"
+
+
+def load_security_events(filepath=AUDIT_LOG_FILE):
+    """
+    Loads all recorded security incidents from the local audit log.
+    """
+    if not os.path.exists(filepath):
+        return []
+    try:
+        with open(filepath, "r", encoding="utf-8") as f:
+            data = json.load(f)
+            if isinstance(data, list):
+                return data
+            return []
+    except Exception:
+        return []
+
+
+def clear_security_events(filepath=AUDIT_LOG_FILE):
+    """
+    Clears historical audit trail.
+    """
+    try:
+        if os.path.exists(filepath):
+            os.remove(filepath)
+        return True
+    except Exception:
+        return False
+
+
+# ── Backward-compatible stubs ────────────────────────────────────────────────
 def send_discord_alert(webhook_url, alert_data):
     """
-    Send a rich Discord embed alert for detected network threats.
-
-    Parameters
-    ----------
-    webhook_url : str — Discord Webhook URL
-    alert_data  : dict — Dictionary containing:
-        - anomaly_type : str ('Port Scan', 'Flood / DDoS', 'Packet Anomaly')
-        - src_ip       : str (Attacker IP)
-        - packet_count : int
-        - unique_ports : int
-        - window_time  : str / float
-
-    Returns
-    -------
-    tuple (success: bool, message: str)
+    Maintained for backwards-compatibility: logs the incident locally into the audit log.
     """
-    if not webhook_url or not webhook_url.strip().startswith("http"):
-        return False, "Invalid or missing webhook URL."
-
-    anomaly_type = alert_data.get("anomaly_type", "Network Anomaly")
-    src_ip = alert_data.get("src_ip", "Unknown")
-    packet_count = alert_data.get("packet_count", 0)
-    unique_ports = alert_data.get("unique_ports", 0)
-    window_time = alert_data.get("window_time", datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
-
-    # Color coding for Discord embeds: Red = Port Scan / Flood, Amber = Anomaly
-    if "Port Scan" in anomaly_type:
-        color = 15158332  # Red
-        title_emoji = "🚨"
-        severity = "HIGH (Reconnaissance Attack)"
-    elif "Flood" in anomaly_type or "DDoS" in anomaly_type:
-        color = 16711680  # Bright Red
-        title_emoji = "💥"
-        severity = "CRITICAL (Volumetric Denial of Service)"
-    else:
-        color = 16753920  # Orange / Amber
-        title_emoji = "⚠️"
-        severity = "MEDIUM (Statistical Outlier)"
-
-    embed = {
-        "title": f"{title_emoji} NetScan NIDS Alert — {anomaly_type}",
-        "description": "Une activité réseau anormale a été interceptée par le moteur d'apprentissage non supervisé Isolation Forest.",
-        "color": color,
-        "timestamp": datetime.utcnow().isoformat(),
-        "footer": {
-            "text": "NetScan NIDS Platform | Mohamed Reda QIYAOUI",
-        },
-
-        "fields": [
-            {
-                "name": "🌐 Adresse Source (Attaquant)",
-                "value": f"`{src_ip}`",
-                "inline": True,
-            },
-            {
-                "name": "🎯 Ports Uniques Ciblés",
-                "value": f"`{unique_ports}` port(s)",
-                "inline": True,
-            },
-            {
-                "name": "📦 Volume de Paquets",
-                "value": f"`{packet_count}` paquets",
-                "inline": True,
-            },
-            {
-                "name": "⚡ Sévérité",
-                "value": severity,
-                "inline": True,
-            },
-            {
-                "name": "🕒 Horodatage",
-                "value": str(window_time),
-                "inline": True,
-            },
-            {
-                "name": "📊 Modèle IA",
-                "value": "Isolation Forest (Layer 2 Macroscopic)",
-                "inline": True,
-            },
-        ],
-    }
-
-    payload = {
-        "username": "NetScan Security Bot",
-        "avatar_url": "https://raw.githubusercontent.com/feathericons/feather/master/icons/shield.png",
-        "embeds": [embed],
-    }
-
-    try:
-        req = urllib.request.Request(
-            webhook_url.strip(),
-            data=json.dumps(payload).encode("utf-8"),
-            headers={
-                "Content-Type": "application/json",
-                "User-Agent": "NetScan-Alerting/1.0",
-            },
-            method="POST",
-        )
-        with urllib.request.urlopen(req, timeout=5) as response:
-            if response.status in (200, 204):
-                return True, "Alert sent successfully to Discord."
-            return False, f"Discord returned HTTP status {response.status}"
-    except urllib.error.HTTPError as e:
-        return False, f"HTTP Error {e.code}: {e.reason}"
-    except Exception as e:
-        return False, f"Connection error: {e}"
+    if not webhook_url:
+        return False, "Discord désactivé: les alertes sont consignées dans le journal d'audit local."
+    ok, msg = log_security_event(alert_data)
+    return ok, "Alerte consignée dans le journal d'audit local (mode local)."
 
 
 def test_discord_webhook(webhook_url):
-    """Send a test embed to confirm the Discord webhook URL is working."""
+    """Stub testing audit logging."""
     test_data = {
-        "anomaly_type": "Test Connectivity / Diagnostic Alert",
-        "src_ip": "192.168.1.100 (Test Host)",
+        "anomaly_type": "Test Incident / Diagnostic",
+        "src_ip": "192.168.1.100",
         "packet_count": 42,
         "unique_ports": 15,
-        "window_time": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
-        "blocked": False,
+        "severity": "MEDIUM",
     }
-    return send_discord_alert(webhook_url, test_data)
+    return log_security_event(test_data)

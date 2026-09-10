@@ -367,30 +367,50 @@ def action_run_diagnostics():
 
 
 
-def action_test_discord():
-    """Configure and test Discord webhook from terminal."""
-    from alerting import load_config, save_config, test_discord_webhook
+def action_view_audit_log():
+    """Display persistent security incident audit log from terminal."""
+    from detection_engine import load_alerts, clear_alerts
+    from alerting import generate_firewall_rule
 
-    cfg = load_config()
-    current_url = cfg.get("discord_webhook_url", "")
-    print(f"\n{Colors.BOLD}{Colors.CYAN}--- Configuration Webhook Discord ---{Colors.RESET}")
-    print(f"URL actuelle : {current_url or '[Non configurée]'}")
+    alerts = load_alerts()
+    print(f"\n{Colors.BOLD}{Colors.CYAN}--- Journal d'Audit & Historique des Incidents NetScan ---{Colors.RESET}")
+    print(f"Fichier journal : alerts_history.json | Total enregistrements : {len(alerts)}\n")
 
-    new_url = input("Entrez la nouvelle URL (ou appuyez sur Entrée pour garder l'actuelle) : ").strip()
-    if new_url:
-        cfg["discord_webhook_url"] = new_url
-        save_config(cfg)
-        current_url = new_url
+    if not alerts:
+        print(f"{Colors.GREEN}[+] Aucun incident ou tentative d'intrusion n'est consigné dans le journal.{Colors.RESET}")
+        return
 
-    if current_url:
-        print(f"{Colors.CYAN}[*] Envoi d'un message d'alerte de test à Discord...{Colors.RESET}")
-        ok, msg = test_discord_webhook(current_url)
-        if ok:
-            print(f"{Colors.GREEN}[+] {msg}{Colors.RESET}")
-        else:
-            print(f"{Colors.RED}[-] {msg}{Colors.RESET}")
-    else:
-        print(f"{Colors.YELLOW}[!] Aucune URL de webhook configurée.{Colors.RESET}")
+    print(f"{Colors.BOLD}{'ID':<18} {'Date / Heure':<20} {'Attaquant IP':<16} {'Menace':<16} {'Sévérité':<10} {'Ports':<8}{Colors.RESET}")
+    print("-" * 90)
+
+    for a in alerts[:25]:
+        aid = a.get("id", "N/A")[:16]
+        ts = a.get("timestamp", "N/A")[:19]
+        ip = str(a.get("src_address", "N/A"))[:15]
+        threat = str(a.get("anomaly_type", "N/A"))[:15]
+        sev = str(a.get("severity", "HIGH"))[:9]
+        ports = str(a.get("unique_dst_ports", 0))
+
+        color = Colors.RED if sev == "CRITICAL" else Colors.YELLOW
+        print(f"{aid:<18} {ts:<20} {color}{ip:<16} {threat:<16} {sev:<10}{Colors.RESET} {ports:<8}")
+
+    if len(alerts) > 25:
+        print(f"{Colors.DIM}... et {len(alerts) - 25} autre(s) incident(s) consigné(s). Ouvrez le Dashboard pour tout voir.{Colors.RESET}")
+
+    print("\nActions :")
+    print(f"  {Colors.CYAN}[c]{Colors.RESET} Afficher la commande de remédiation pare-feu pour le dernier attaquant")
+    print(f"  {Colors.RED}[x]{Colors.RESET} Effacer l'historique du journal d'audit")
+    print(f"  {Colors.DIM}[Entrée]{Colors.RESET} Retour au menu principal")
+    sub_choice = input(f"{Colors.BOLD}audit > {Colors.RESET}").strip().lower()
+
+    if sub_choice == "c" and alerts:
+        last_ip = alerts[0].get("src_address", "")
+        rule = generate_firewall_rule(last_ip)
+        print(f"\n{Colors.GREEN}[+] Commande pare-feu recommandée pour {last_ip} :{Colors.RESET}")
+        print(f"    {Colors.BOLD}{rule}{Colors.RESET}\n")
+    elif sub_choice == "x":
+        clear_alerts()
+        print(f"{Colors.YELLOW}[!] Journal d'audit réinitialisé avec succès.{Colors.RESET}")
 
 
 
@@ -437,7 +457,7 @@ def main():
         print(f"         {Colors.DIM}↳ Un rapport HTML/PDF vous sera proposé à la fin de l'analyse{Colors.RESET}")
         print(f"  {Colors.GREEN}[3]{Colors.RESET} Lancer le Tableau de Bord Web Interactif (Streamlit)")
         print(f"  {Colors.GREEN}[4]{Colors.RESET} Exécuter les Diagnostics Système & Tests")
-        print(f"  {Colors.GREEN}[5]{Colors.RESET} Tester les Alertes Webhook Discord")
+        print(f"  {Colors.GREEN}[5]{Colors.RESET} Consulter le Journal d'Audit des Incidents (Historique)")
         print(f"  {Colors.RED}[0]{Colors.RESET} Quitter")
 
         choice = input(f"\n{Colors.BOLD}netscan > {Colors.RESET}").strip()
@@ -451,7 +471,7 @@ def main():
         elif choice == "4":
             action_run_diagnostics()
         elif choice == "5":
-            action_test_discord()
+            action_view_audit_log()
         elif choice in ("0", "exit", "quit", "q"):
             print(f"\n{Colors.CYAN}Au revoir !{Colors.RESET}")
             break

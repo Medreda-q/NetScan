@@ -1,0 +1,11 @@
+[
+  {
+    "timestamp": "2026-09-09 23:10:37",
+    "anomaly_type": "Port Scan",
+    "src_address": "192.168.1.45",
+    "packet_count": 350,
+    "unique_dst_ports": 340,
+    "severity": "CRITICAL",
+    "firewall_rule": "netsh advfirewall firewall add rule name=\"NetScan-Block-192.168.1.45\" dir=in action=block remoteip=192.168.1.45"
+  }
+]

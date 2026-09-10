@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>NetScan — Fiche Technique & Cartographie Logicielle</title>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+    <style>
+        @page {
+            size: A4;
+            margin: 15mm 15mm 15mm 15mm;
+        }
+        body {
+            font-family: 'Plus Jakarta Sans', -apple-system, sans-serif;
+            color: #1E293B;
+            background: #FFFFFF;
+            line-height: 1.45;
+            font-size: 9.5pt;
+            margin: 0;
+            padding: 20px;
+        }
+        .header {
+            border-bottom: 2px solid #0EA5E9;
+            padding-bottom: 10px;
+            margin-bottom: 14px;
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+        }
+        .header h1 {
+            font-size: 18pt;
+            font-weight: 800;
+            color: #0F172A;
+            margin: 0 0 4px 0;
+            letter-spacing: -0.5px;
+        }
+        .header .subtitle {
+            font-size: 10pt;
+            color: #64748B;
+            font-weight: 500;
+        }
+        .meta-box {
+            text-align: right;
+            font-size: 8.5pt;
+            color: #475569;
+        }
+        .meta-box strong {
+            color: #0F172A;
+        }
+        h2 {
+            font-size: 11pt;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: #0284C7;
+            border-bottom: 1px solid #E2E8F0;
+            padding-bottom: 4px;
+            margin: 14px 0 8px 0;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 14px;
+            font-size: 8.5pt;
+        }
+        th, td {
+            border: 1px solid #CBD5E1;
+            padding: 6px 8px;
+            text-align: left;
+            vertical-align: top;
+        }
+        th {
+            background-color: #F8FAFC;
+            color: #0F172A;
+            font-weight: 700;
+            text-transform: uppercase;
+            font-size: 8pt;
+            letter-spacing: 0.3px;
+        }
+        tr:nth-child(even) td {
+            background-color: #F8FAFC;
+        }
+        code {
+            font-family: 'JetBrains Mono', monospace;
+            background: #F1F5F9;
+            color: #0369A1;
+            padding: 1px 4px;
+            border-radius: 3px;
+            font-size: 8pt;
+        }
+        .pipeline {
+            background: #F8FAFC;
+            border: 1px solid #E2E8F0;
+            border-radius: 6px;
+            padding: 10px 14px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 8pt;
+            color: #334155;
+            line-height: 1.35;
+            white-space: pre;
+            margin-bottom: 12px;
+        }
+        .discours-box {
+            background: #F0F9FF;
+            border-left: 3px solid #0284C7;
+            padding: 8px 12px;
+            font-size: 8.5pt;
+            color: #0369A1;
+            font-style: italic;
+        }
+        .print-btn {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: #0284C7;
+            color: #FFFFFF;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 6px;
+            font-weight: 600;
+            cursor: pointer;
+            box-shadow: 0 4px 10px rgba(2, 132, 199, 0.3);
+        }
+        @media print {
+            .print-btn { display: none; }
+            body { padding: 0; }
+        }
+    </style>
+</head>
+<body>
+
+    <button class="print-btn" onclick="window.print()">Imprimer (PDF / Papier)</button>
+
+    <div class="header">
+        <div>
+            <h1>NetScan — Fiche Technique & Cartographie Logicielle</h1>
+            <div class="subtitle">Système Intelligent de Détection d'Anomalies Réseau par Machine Learning Non Supervisé</div>
+        </div>
+        <div class="meta-box">
+            <div><strong>Candidat :</strong> Mohamed Reda QIYAOUI</div>
+            <div><strong>Filière :</strong> DUT Cybersécurité | EST Tétouan</div>
+            <div><strong>Session :</strong> Soutenance 2025 / 2026</div>
+        </div>
+    </div>
+
+    <h2>1. Répertoire des Composants & Responsabilités Logicielles</h2>
+    <table>
+        <thead>
+            <tr>
+                <th style="width: 22%;">Module & Fichier Source</th>
+                <th style="width: 48%;">Rôle Technique & Responsabilité</th>
+                <th style="width: 30%;">Entrées / Sorties (I/O)</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td><code>netscan.py</code><br><code>netscan.bat / .sh</code></td>
+                <td><strong>Orchestrateur & Lanceur Unifié (CLI) :</strong> Détection automatique de l'OS, validation des pilotes de capture (Npcap sous Windows, libpcap sous Linux), gestion des privilèges administrateur et routage vers les modules.</td>
+                <td><strong>In :</strong> Drapeaux CLI (<code>--live</code>, <code>--pcap</code>, <code>--dashboard</code>)<br><strong>Out :</strong> Lancement des sous-modules</td>
+            </tr>
+            <tr>
+                <td><code>detection_engine.py</code></td>
+                <td><strong>Moteur IA & Cœur Algorithmique :</strong> Double Isolation Forest (Layer 1 unitaire par trame et Layer 2 fenêtres glissantes de 5s). Implémente le mode <em>Calibrate-Then-Monitor</em> (120s) et le ratio de diversité portuaire.</td>
+                <td><strong>In :</strong> Trames réseau brutes (Live ou PCAP)<br><strong>Out :</strong> Scores d'anomalie, classification (Scan vs DDoS)</td>
+            </tr>
+            <tr>
+                <td><code>dashboard.py</code></td>
+                <td><strong>Tableau de Bord SOC Interactif (Streamlit) :</strong> Visualisation en temps réel des flux analysés, KPI cards, visualiseur d'inspection forensic de fichiers PCAP uploadés et audit trail d'incidents.</td>
+                <td><strong>In :</strong> Trames streaming & historiques CSV/JSON<br><strong>Out :</strong> Interface graphique SOC haute définition</td>
+            </tr>
+            <tr>
+                <td><code>alerting.py</code></td>
+                <td><strong>Module SIEM & Réponse Active (SOAR) :</strong> Envoi d'alertes webhook Discord structurées en moins de 300 ms et génération immédiate des règles pare-feu (<code>iptables DROP</code> / <code>netsh advfirewall</code>).</td>
+                <td><strong>In :</strong> Alertes confirmées du moteur IA<br><strong>Out :</strong> Webhooks Discord + Commandes pare-feu</td>
+            </tr>
+            <tr>
+                <td><code>report_generator.py</code></td>
+                <td><strong>Générateur de Rapports NIST / CIS :</strong> Exportation automatique en 1 clic de rapports d'incident exécutifs et judiciaires conformes aux directives NIST SP 800-61 (formats HTML et PDF imprimables).</td>
+                <td><strong>In :</strong> Métriques de session et chronologie d'attaque<br><strong>Out :</strong> Rapport exécutif téléchargeable (PDF/HTML)</td>
+            </tr>
+            <tr>
+                <td><code>test_smoke.py</code><br><code>test_detection_pcap.py</code></td>
+                <td><strong>Suite de Tests Automatisés & Intégrité :</strong> Vérification de la compatibilité événementielle asyncio Windows, intégrité du parsing réseau et validation du benchmark forensic (100% de réussite).</td>
+                <td><strong>In :</strong> Scénarios de tests unitaires & <code>sample_nmap_attack.pcap</code><br><strong>Out :</strong> Validation de non-régression</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <h2>2. Pipeline d'Interconnexion & Chronologie d'Exécution</h2>
+    <div class="pipeline">[ Capture Réseau : Live Npcap / libpcap  OU  Fichier Forensic .PCAP ]
+                       │
+                       ▼
+              detection_engine.py
+  ┌────────────────────┴────────────────────┐
+  ▼                                         ▼
+[ Phase 1 : Calibration 120s ]          [ Phase 2 : Surveillance Continue (Fenêtres 5s) ]
+  Apprentissage de la baseline             Extraction du Vecteur 5D [Volume, Taille, Ports, IPs, SYN]
+  0% de faux positifs                      Scoring Isolation Forest (Layer 1 + Layer 2)
+  │                                         │
+  └────────────────────┬────────────────────┘
+                       ▼
+      [ Heuristique : Ratio = unique_ports / packet_count ]
+       ├── Ratio > 0.5   ===>  PORT SCAN DÉTECTÉ (Nmap -sS)
+       └── Ratio <= 0.5  ===>  DDoS / SYN FLOOD DÉTECTÉ
+                       │
+       ┌───────────────┴───────────────┐
+       ▼                               ▼
+  alerting.py                     dashboard.py
+  - Webhook Discord (< 300ms)     - Visualisation des flux SOC
+  - Commande Firewall auto        - Audit trail persistant (JSON/CSV)
+    (iptables / netsh)                         │
+       │                                       ▼
+       └───────────────┬───────────────────────┘
+                       ▼
+              report_generator.py
+  - Rapport d'Incident Exécutif NIST SP 800-61 (PDF / HTML)</div>
+
+    <h2>3. Guide de Présentation Orale (Comment introduire ce document au Jury)</h2>
+    <div class="discours-box">
+        « Messieurs les membres du jury, vous avez entre les mains la fiche technique de NetScan. Comme vous pouvez le constater, ce projet est une suite logicielle complète et structurée : l'orchestrateur <code>netscan.py</code> sécurise la capture bas niveau, le moteur <code>detection_engine.py</code> porte l'algorithme double-layer, le module <code>alerting.py</code> confine la menace via le pare-feu, l'interface <code>dashboard.py</code> assiste l'analyste SOC, et le générateur <code>report_generator.py</code> garantit la conformité NIST SP 800-61. Voyons maintenant comment ces briques s'exécutent en temps réel... »
+    </div>
+
+</body>
+</html>

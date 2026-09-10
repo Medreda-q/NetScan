@@ -107,19 +107,23 @@ assert win0["syn_count"]        == 5, f"Window 0 should have 5 SYN packets, got 
 print(f"    Window 0: {win0['unique_dst_ports']} unique ports, {win0['syn_count']} SYN pkts  [OK]")
 print("    aggregate_windows()  [OK]")
 
-# ── 5. Alerting & Discord Webhook logic test ──────────────────────────────────
-print("\n[5] Testing Alerting & Discord webhook payload logic...")
-from alerting import send_discord_alert, load_config, save_config
+# ── 5. Audit Logging & Security Event Management test ────────────────────────
+print("\n[5] Testing Security Audit Logging & Firewall Rule generation...")
+from alerting import log_security_event, load_security_events, generate_firewall_rule
 
-# Test invalid/empty webhook safety
-ok, msg = send_discord_alert("", {"anomaly_type": "Test"})
-assert not ok, "Empty webhook should safely return False"
-print("    Empty/invalid webhook safety handling  [OK]")
-
-# Test config load/save
-cfg = load_config()
-assert isinstance(cfg, dict), "load_config should return a dict"
-print("    Alerting config persistence  [OK]")
+test_evt = {
+    "anomaly_type": "Port Scan",
+    "src_ip": "192.168.1.45",
+    "packet_count": 350,
+    "unique_ports": 340,
+    "severity": "CRITICAL",
+}
+ok, msg = log_security_event(test_evt)
+assert ok, "Audit logging should succeed"
+rule = generate_firewall_rule("192.168.1.45")
+assert "192.168.1.45" in rule, "Firewall rule must contain target IP"
+print(f"    Firewall rule generated: {rule[:45]}...  [OK]")
+print("    Security audit logging persistence  [OK]")
 
 # ── 6. Executive Incident Report Generator test ───────────────────────────────
 print("\n[6] Testing Executive Incident Report Generator (HTML/PDF)...")
