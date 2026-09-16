@@ -59,28 +59,42 @@ rows.append({
     "syn_count": 500,
 })
 
-# Flood source: 800 packets, only 2 unique ports, ratio = 0.0025
+# Flood source: 500 packets, only 2 unique ports, large frames (CDN amplification)
 rows.append({
     "Src_Address": "10.99.99.99",
     "time_window": 0.0,
-    "packet_count": 800,
-    "avg_packet_length": 64.0,
-    "unique_dst_ports": 2,
+    "packet_count": 500,
+    "avg_packet_length": 1058.0,  # Near-MTU frames = volumetric amplification
+    "unique_dst_ports": 1,
     "unique_dst_ips": 1,
+    "syn_count": 0,
+})
+
+# Normal web download: high packet count, small frames, no SYN — should NOT be flagged
+rows.append({
+    "Src_Address": "192.168.1.106",
+    "time_window": 0.0,
+    "packet_count": 700,
+    "avg_packet_length": 72.0,  # Small ACK/data frames typical of TCP streaming
+    "unique_dst_ports": 2,
+    "unique_dst_ips": 3,
     "syn_count": 0,
 })
 
 window_df = pd.DataFrame(rows)
 result = detect_window_anomalies(window_df)
 
-scanner_label = result.loc[result["Src_Address"] == "192.168.1.100", "Anomaly_Type"].values[0]
-flood_label   = result.loc[result["Src_Address"] == "10.99.99.99",   "Anomaly_Type"].values[0]
+scanner_label   = result.loc[result["Src_Address"] == "192.168.1.100", "Anomaly_Type"].values[0]
+flood_label     = result.loc[result["Src_Address"] == "10.99.99.99",   "Anomaly_Type"].values[0]
+normal_label    = result.loc[result["Src_Address"] == "192.168.1.106", "Anomaly_Type"].values[0]
 
-print(f"    Scanner (500 pkts, 500 ports) -> label: '{scanner_label}'  (expected: Port Scan)")
-print(f"    Flood   (800 pkts, 2 ports)   -> label: '{flood_label}'  (expected: Flood / DDoS)")
+print(f"    Scanner (500 pkts, 500 ports)           -> label: '{scanner_label}'  (expected: Port Scan)")
+print(f"    Flood   (500 pkts, 1 port, 1058B frames) -> label: '{flood_label}'  (expected: Flood / DDoS)")
+print(f"    Normal  (700 pkts, 2 ports, 72B, syn=0)  -> label: '{normal_label}'  (expected: Normal)")
 
 assert scanner_label == "Port Scan",    f"FAIL: scanner labeled '{scanner_label}', expected 'Port Scan'"
 assert flood_label   == "Flood / DDoS", f"FAIL: flood labeled '{flood_label}', expected 'Flood / DDoS'"
+assert normal_label  != "Flood / DDoS", f"FAIL: normal web traffic falsely labeled 'Flood / DDoS'"
 print("    Detection labels  [OK]")
 
 # ── 4. aggregate_windows logic test ───────────────────────────────────────────

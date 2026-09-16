@@ -625,53 +625,64 @@ def detect_window_anomalies(window_df):
     anomalous_mask = window_df["Anomaly"] == -1
 
     # Minimum packet-count guard: suppress alerts on low-volume windows.
-    # A real attack generates significant traffic; a few-packet window flagged
-    # by IsolationForest is almost certainly a false positive caused by a rare
-    # but benign traffic burst (e.g. a single HTTPS response from a CDN).
-    # PORT SCAN minimum: >=2 packets (scans can be slow/stealthy)
-    # FLOOD minimum   : >=50 packets in 5s = 10 pkt/s, a meaningful rate
     MIN_PACKETS_SCAN  = 2
-    MIN_PACKETS_FLOOD = 50
 
     # Port diversity ratio: (unique dst ports) / (total packets in window)
-    # A ratio near 1.0 means almost every packet went to a unique port → scan.
-    # We use .replace(0, 1) to avoid division-by-zero on empty windows.
     port_diversity_ratio = (
         window_df["unique_dst_ports"] / window_df["packet_count"].replace(0, 1)
     )
 
     # ── ML-based classification ─────────────────────────────────────────────
-    # Classify: port scan if multiple unique destination ports are probed
+    # Port scan criteria:
+    # 1. Broad port sweep: contacting >= 15 distinct ports
+    # 2. Sequential stealth scan: >= 8 ports with high diversity ratio (>= 0.60)
+    # 3. SYN port scan: >= 5 ports with syn_count >= 5 and ratio >= 0.35
     port_scan_mask = (
         anomalous_mask
         & (
-            (window_df["unique_dst_ports"] >= 20)
-            | ((window_df["unique_dst_ports"] >= 8) & (port_diversity_ratio >= 0.35))
-            | ((port_diversity_ratio >= 0.50) & (window_df["packet_count"] >= 10) & (window_df["unique_dst_ports"] >= 5))
+            (window_df["unique_dst_ports"] >= 15)
+            | ((window_df["unique_dst_ports"] >= 8) & (port_diversity_ratio >= 0.60))
+            | ((window_df["unique_dst_ports"] >= 5) & (window_df["syn_count"] >= 5) & (port_diversity_ratio >= 0.35))
         )
         & (window_df["packet_count"] >= MIN_PACKETS_SCAN)
     )
-    # Classify: flood if high packet volume concentrated on very few destination ports (typically 1-3 ports)
+
+    # Flood / DDoS criteria:
+    # True floods have one of three signatures:
+    # 1. SYN Flood: high syn_count (many half-open connections, no ACK)
+    # 2. Volumetric Amplification: very large avg packet size (near MTU, >= 900 bytes)
+    #    combined with high volume — characteristic of UDP/ICMP reflection attacks.
+    # 3. Extreme packet rate: >= 400 packets on <= 3 ports.
+    # Normal web downloads: syn_count ~ 0, avg_packet_length ~ 60-1500 bytes but LOW volume.
+    is_syn_flood = (
+        (window_df["syn_count"] >= 15)
+        | ((window_df["syn_count"] >= 8) & ((window_df["syn_count"] / window_df["packet_count"].replace(0, 1)) >= 0.20))
+    )
+    is_volumetric_flood = (
+        (window_df["packet_count"] >= 400)
+        & (window_df["unique_dst_ports"] <= 3)
+        & (
+            (window_df.get("avg_packet_length", 0) >= 900)  # large-frame amplification
+            | (window_df["packet_count"] >= 1200)            # extreme rate regardless of size
+        )
+    )
     flood_mask = (
         anomalous_mask
         & ~port_scan_mask
-        & (window_df["unique_dst_ports"] <= 3)
-        & (window_df["packet_count"] >= MIN_PACKETS_FLOOD)
+        & (window_df["unique_dst_ports"] <= 5)
+        & (is_syn_flood | is_volumetric_flood)
     )
 
     window_df.loc[port_scan_mask, "Anomaly_Type"] = "Port Scan"
     window_df.loc[flood_mask, "Anomaly_Type"] = "Flood / DDoS"
 
     # ── Hard-coded rule: catch stealthy/slow scans the ML model may miss ─────
-    # Real scans probe many ports or exhibit high diversity (1-2 pkts per port).
-    # Normal OS host activity (browser tabs, SSDP, mDNS, DNS) touches 5-15 ports
-    # but generates hundreds of packets, yielding a very low ratio (< 0.15).
     HARD_SCAN_MIN_PORTS = 25
-    HARD_SCAN_MIN_RATIO = 0.40
+    HARD_SCAN_MIN_RATIO = 0.50
     hard_scan_mask = (
         (
             (window_df["unique_dst_ports"] >= HARD_SCAN_MIN_PORTS)
-            | ((window_df["unique_dst_ports"] >= 10) & (port_diversity_ratio >= HARD_SCAN_MIN_RATIO))
+            | ((window_df["unique_dst_ports"] >= 15) & (port_diversity_ratio >= HARD_SCAN_MIN_RATIO))
         )
         & (window_df["Anomaly_Type"] != "Port Scan")
     )
@@ -733,6 +744,23 @@ def get_available_interfaces():
     except Exception:
         pass
     return ifaces
+
+
+def get_local_ip():
+    """
+    Detect the primary local IP address of this machine.
+    Used for filtering outbound analyst traffic in live surveillance.
+    """
+    try:
+        import socket
+        s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        s.settimeout(0.5)
+        s.connect(("8.8.8.8", 80))
+        local_ip = s.getsockname()[0]
+        s.close()
+        return local_ip
+    except Exception:
+        return None
 
 
 def capture_live_packets(interface=None, timeout=5):
@@ -798,14 +826,15 @@ def capture_live_packets(interface=None, timeout=5):
             raise PermissionError(err_msg) from e_scapy
 
 
-def calibrate_baseline(df_packets, window_size=5):
+def calibrate_baseline(df_packets, window_size=5, contamination=0.02):
     """
     Phase 1: Calibrate baseline Isolation Forest and StandardScaler from session traffic.
 
     Parameters
     ----------
-    df_packets  : pd.DataFrame — packet data collected during Phase 1
-    window_size : int — aggregation window size in seconds (default: 5)
+    df_packets    : pd.DataFrame — packet data collected during Phase 1
+    window_size   : int — aggregation window size in seconds (default: 5)
+    contamination : float — expected proportion of outliers (default: 0.02)
 
     Returns
     -------
@@ -818,7 +847,7 @@ def calibrate_baseline(df_packets, window_size=5):
         window_df = aggregate_windows(df_packets, window_size=window_size)
 
     scaler = StandardScaler()
-    model = IsolationForest(contamination=0.02, random_state=42)
+    model = IsolationForest(contamination=contamination, random_state=42)
 
     if len(window_df) >= 2:
         # Check for near-zero variance across all feature columns (e.g. synthetic/constant traffic)
@@ -881,32 +910,46 @@ def score_monitoring_window(df_packets, scaler, model, window_size=5):
 
     anomalous_mask = window_df["Anomaly"] == -1
 
-    # Minimum packet-count guards — same thresholds as detect_window_anomalies.
-    # Prevents low-volume normal traffic (CDN, idle peers) from being mislabelled.
+    # Minimum packet-count guards — prevents low-volume normal traffic from being mislabelled.
     MIN_PACKETS_SCAN  = 2
-    MIN_PACKETS_FLOOD = 50
 
     port_diversity_ratio = (
         window_df["unique_dst_ports"] / window_df["packet_count"].replace(0, 1)
     )
 
     # ── ML-based classification ─────────────────────────────────────────────
-    # Classify: port scan if multiple unique destination ports are probed
+    # Port scan criteria:
+    # 1. Broad port sweep: contacting >= 15 distinct ports
+    # 2. Sequential stealth scan: >= 8 ports with high diversity ratio (>= 0.60)
+    # 3. SYN port scan: >= 5 ports with syn_count >= 5 and ratio >= 0.35
     port_scan_mask = (
         anomalous_mask
         & (
-            (window_df["unique_dst_ports"] >= 20)
-            | ((window_df["unique_dst_ports"] >= 8) & (port_diversity_ratio >= 0.35))
-            | ((port_diversity_ratio >= 0.50) & (window_df["packet_count"] >= 10) & (window_df["unique_dst_ports"] >= 5))
+            (window_df["unique_dst_ports"] >= 15)
+            | ((window_df["unique_dst_ports"] >= 8) & (port_diversity_ratio >= 0.60))
+            | ((window_df["unique_dst_ports"] >= 5) & (window_df["syn_count"] >= 5) & (port_diversity_ratio >= 0.35))
         )
         & (window_df["packet_count"] >= MIN_PACKETS_SCAN)
     )
-    # Classify: flood if high packet volume concentrated on very few destination ports (typically 1-3 ports)
+
+    # Flood / DDoS criteria (same logic as detect_window_anomalies):
+    is_syn_flood = (
+        (window_df["syn_count"] >= 15)
+        | ((window_df["syn_count"] >= 8) & ((window_df["syn_count"] / window_df["packet_count"].replace(0, 1)) >= 0.20))
+    )
+    is_volumetric_flood = (
+        (window_df["packet_count"] >= 400)
+        & (window_df["unique_dst_ports"] <= 3)
+        & (
+            (window_df.get("avg_packet_length", 0) >= 900)
+            | (window_df["packet_count"] >= 1200)
+        )
+    )
     flood_mask = (
         anomalous_mask
         & ~port_scan_mask
-        & (window_df["unique_dst_ports"] <= 3)
-        & (window_df["packet_count"] >= MIN_PACKETS_FLOOD)
+        & (window_df["unique_dst_ports"] <= 5)
+        & (is_syn_flood | is_volumetric_flood)
     )
 
     window_df.loc[port_scan_mask, "Anomaly_Type"] = "Port Scan"
@@ -914,11 +957,11 @@ def score_monitoring_window(df_packets, scaler, model, window_size=5):
 
     # ── Hard-coded rule: catch stealthy/slow scans the ML model may miss ─────
     HARD_SCAN_MIN_PORTS = 25
-    HARD_SCAN_MIN_RATIO = 0.40
+    HARD_SCAN_MIN_RATIO = 0.50
     hard_scan_mask = (
         (
             (window_df["unique_dst_ports"] >= HARD_SCAN_MIN_PORTS)
-            | ((window_df["unique_dst_ports"] >= 10) & (port_diversity_ratio >= HARD_SCAN_MIN_RATIO))
+            | ((window_df["unique_dst_ports"] >= 15) & (port_diversity_ratio >= HARD_SCAN_MIN_RATIO))
         )
         & (window_df["Anomaly_Type"] != "Port Scan")
     )
@@ -938,6 +981,7 @@ def run_live_detection(
     callback=None,
     stop_event=None,
     packet_source=None,
+    filter_local_ip=True,
 ):
     """
     Run live two-phase network anomaly detection.
