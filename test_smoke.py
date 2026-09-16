@@ -33,10 +33,13 @@ import numpy as np
 
 rows = []
 
-# 30 normal host windows (low packet count, low port diversity)
-for i in range(30):
+# 200 normal host windows (low packet count, low port diversity)
+# Contamination=0.02 needs >=100 rows to guarantee even 2 flagged slots.
+# Using 200 rows gives 4 anomaly slots -> both attack rows reliably flagged.
+np.random.seed(0)
+for i in range(200):
     rows.append({
-        "Src_Address": f"10.0.0.{i+1}",
+        "Src_Address": f"10.0.{i // 256}.{i % 256 + 1}",
         "time_window": 0.0,
         "packet_count": int(np.random.randint(5, 20)),
         "avg_packet_length": float(np.random.uniform(200, 800)),
