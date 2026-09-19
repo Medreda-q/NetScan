@@ -10,7 +10,7 @@ Provides two distinct operating modes:
   2. Surveillance Réseau en Direct (Live) : Live packet sniffing with baseline calibration.
 
 Run with:
-    streamlit run dashboard.py
+    python -m streamlit run dashboard.py
 """
 
 import asyncio
@@ -682,7 +682,7 @@ def render_live_monitoring():
                     f"{str(pe)}\n\n"
                     f"Actions requises :\n"
                     f"- Windows : Installez Npcap (mode compatible WinPcap) et lancez le terminal en Administrateur.\n"
-                    f"- Linux / macOS : Lancez avec sudo : `sudo streamlit run dashboard.py`"
+                    f"- Linux / macOS : Lancez avec sudo : `sudo python3 -m streamlit run dashboard.py`"
                 )
                 st.stop()
             except Exception as e:

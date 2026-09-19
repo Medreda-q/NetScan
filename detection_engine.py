@@ -736,7 +736,7 @@ def _format_permission_error(interface=None, raw_error=""):
         f"             terminal or IDE as Administrator.\n"
         f"  • Linux / macOS: Run with root / sudo permissions:\n"
         f"             sudo python detection_engine.py\n"
-        f"             or sudo streamlit run dashboard.py\n"
+        f"             or sudo python3 -m streamlit run dashboard.py\n"
         f"{'='*75}\n"
     )
 

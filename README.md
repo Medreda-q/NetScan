@@ -310,8 +310,17 @@ python netscan.py --check
 Launch the modern web console:
 
 ```bash
-streamlit run dashboard.py
+# Windows
+python -m streamlit run dashboard.py
+
+# Linux / macOS
+python3 -m streamlit run dashboard.py
+
+# Or via the unified launcher (handles this automatically)
+python netscan.py --dashboard
 ```
+
+> **Windows Tip**: If you see `'streamlit' is not recognized`, always use `python -m streamlit run dashboard.py` instead of `streamlit run dashboard.py` directly. The `-m` flag invokes it through your Python environment, bypassing the PATH issue.
 
 <p align="center">
   <img src="assets/netscan_dashboard.jpg" alt="NetScan Forensic SOC Web Dashboard" width="100%" />
