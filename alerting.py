@@ -1,6 +1,5 @@
 """
 NetScan — Security Audit Logging & Incident Management Module
-DUT Cybersecurity Stage d'Initiation (Septembre 2026)
 Author: Mohamed Reda QIYAOUI
 
 Provides persistent local audit logging for all detected intrusion attempts

@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 """
 NetScan — Network Traffic Anomaly Detection Platform
-DUT Cybersecurity Stage d'Initiation (Septembre 2026)
 Author: Mohamed Reda QIYAOUI
 
 Kali-Style Terminal Launcher & Automatic Environment Bootstrapper
@@ -51,7 +50,7 @@ def print_banner():
 | |\\  |  __/ |_ ___) | (_| (_| | | | |
 |_| \\_|\\___|\\__|____/ \\___\\__,_|_| |_|
 {Colors.BLUE}Système de Détection d'Anomalies Réseau — Apprentissage Non Supervisé
-{Colors.DIM}Auteur : Mohamed Reda QIYAOUI — DUT Cybersécurité (Septembre 2026){Colors.RESET}
+{Colors.DIM}Auteur : Mohamed Reda QIYAOUI — Projet Open Source{Colors.RESET}
 """
     print(banner)
 

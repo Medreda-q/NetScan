@@ -2,8 +2,6 @@
 detection_engine.py — Network Traffic Anomaly Detector & IPS Engine
 ====================================================================
 Author: Mohamed Reda QIYAOUI
-DUT Cybersecurity — Stage d'Initiation (Septembre 2026)
-École Supérieure de Technologie (EST)
 
 ARCHITECTURE OVERVIEW
 ---------------------
@@ -46,7 +44,6 @@ each environment's baseline traffic before initiating continuous surveillance.
 AUTHOR & COPYRIGHT
 ------------------
 Author: Mohamed Reda QIYAOUI
-DUT Cybersecurity — Stage d'Initiation, Septembre 2026
 Copyright (c) 2026 Mohamed Reda QIYAOUI. All rights reserved.
 
 DEPENDENCIES

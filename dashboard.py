@@ -2,7 +2,7 @@
 dashboard.py — NetScan Streamlit Dashboard
 =========================================
 Author: Mohamed Reda QIYAOUI
-DUT Cybersecurity — Stage d'Initiation, Septembre 2026
+Network Intrusion Detection & Analysis System (NIDS/NIPS)
 
 Interactive front-end for the dual-layer network anomaly detection pipeline.
 Provides two distinct operating modes:
@@ -1237,7 +1237,7 @@ elif mode == "📋 Historique des Incidents (Audit Log)":
 st.markdown(
     """
     <div style="text-align: center; margin-top: 50px; padding: 25px 10px; border-top: 1px solid rgba(255,255,255,0.1); color: #64748b; font-size: 0.85rem;">
-        NetScan NIDS Platform &nbsp;•&nbsp; Conçu et Développé par <b>Mohamed Reda QIYAOUI</b> &nbsp;•&nbsp; Soutenance DUT Cybersécurité — EST
+        NetScan NIDS Platform &nbsp;•&nbsp; Conçu et Développé par <b>Mohamed Reda QIYAOUI</b> &nbsp;•&nbsp; Open Source Security Project
     </div>
     """,
     unsafe_allow_html=True,

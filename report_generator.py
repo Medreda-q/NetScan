@@ -1,6 +1,5 @@
 """
 NetScan — Executive Incident Report Generator
-DUT Cybersecurity Stage d'Initiation (Septembre 2026)
 Author: Mohamed Reda QIYAOUI
 
 Generates executive-ready HTML & printable PDF incident forensic reports.
@@ -231,7 +230,7 @@ def generate_html_incident_report(
             </div>
             <div class="meta-box">
                 <div><strong>Analyste :</strong> Mohamed Reda QIYAOUI</div>
-                <div><strong>Cadre :</strong> Soutenance DUT Cybersécurité</div>
+                <div><strong>Système :</strong> NetScan NIDS/NIPS</div>
                 <div><strong>Généré le :</strong> {now_str}</div>
                 <div><strong>Cible :</strong> {source_target}</div>
             </div>

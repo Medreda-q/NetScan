@@ -7,6 +7,10 @@
 [![Network Engine](https://img.shields.io/badge/Packet%20Engine-Scapy%20%2F%20PyShark-red.svg)](https://scapy.net/)
 [![Interface](https://img.shields.io/badge/Dashboard-Streamlit-FF4B4B.svg?logo=streamlit&logoColor=white)](https://streamlit.io/)
 
+<p align="center">
+  <img src="assets/netscan_soc_hero.jpg" alt="NetScan AI SOC Command Center" width="100%" />
+</p>
+
 **NetScan** is an advanced, unsupervised machine learning **Network Intrusion Detection & Analysis System (NIDS/NIPS)** designed to uncover both microscopic packet anomalies and macroscopic, multi-host attack behaviors in real time. 
 
 Operating independently of traditional signature databases, NetScan detects novel zero-day threats, stealth port scans, volumetric floods, and malformed frames by establishing dynamic behavioral baselines with **Isolation Forest** algorithms across both live network streams and offline forensic packet captures (`.pcap`).
@@ -112,6 +116,10 @@ Layer 1 operates at the individual frame level, parsing packet headers to detect
   - **Unexpected Protocol**: Rare or unauthorized transport/network protocols.
   - **Malformed Packet**: Frames with missing or corrupted IP/MAC address headers.
 
+<p align="center">
+  <img src="assets/anomaly_score_distribution.png" alt="Isolation Forest Decision Score Distribution" width="85%" />
+</p>
+
 ### Layer 2 — Macroscopic Time-Windowed Behavioral Detection
 
 A stealth TCP SYN port scan (e.g., `nmap -sS`) transmits regular 40-to-60 byte SYN packets that look completely benign to Layer 1. Layer 2 aggregates traffic over sliding time windows (default: **5 seconds**) grouped by `(Src_Address, time_window)` to detect multi-packet behavioral patterns.
@@ -131,6 +139,10 @@ A stealth TCP SYN port scan (e.g., `nmap -sS`) transmits regular 40-to-60 byte S
     $$\frac{\text{unique\_dst\_ports}}{\text{packet\_count}} \le 0.5$$
     *(Massive packet transmission rates concentrated on one or few ports, characteristic of SYN floods, UDP floods, or volumetric denial-of-service).*
 
+<p align="center">
+  <img src="assets/port_diversity_ratio.png" alt="Port Diversity Ratio Signature" width="70%" />
+</p>
+
 ### Layer 3 — Real-Time Calibrate-Then-Monitor Engine
 
 For live network surveillance, NetScan introduces a **two-phase adaptive stream analysis**:
@@ -139,6 +151,10 @@ For live network surveillance, NetScan introduces a **two-phase adaptive stream 
    NetScan sniffs live traffic on the chosen network interface to observe normal operational traffic patterns. It trains a localized session `StandardScaler` and `IsolationForest` without modifying the global baseline. The console and dashboard display a live countdown: `"Learning normal traffic... X seconds remaining"`.
 2. **Phase 2 — Continuous Surveillance (Default: 5s sliding windows)**:
    Traffic is continuously aggregated into discrete temporal windows, transformed against the Phase 1 calibration model, and scored in real time. Anomalies immediately trigger SOC alerts and incident records.
+
+<p align="center">
+  <img src="assets/threat_lifecycle_timeline.png" alt="Calibrate-Then-Monitor Engine Lifecycle" width="85%" />
+</p>
 
 ---
 
@@ -156,7 +172,7 @@ Whenever an anomalous host or port scan is confirmed, NetScan generates tailored
   ```
 
 ### 2. Executive Incident Forensic Reports (HTML / PDF)
-NetScan includes an integrated reporting engine ([report_generator.py](file:///c:/Users/DevLab/Documents/GitHub/EST/Soutenance%20Project/report_generator.py)) that produces publication-grade incident documentation:
+NetScan includes an integrated reporting engine ([report_generator.py](report_generator.py)) that produces publication-grade incident documentation:
 - Executive summary metrics (analyzed frames, flagged windows, severity ratios).
 - Threat actor inventory (source IPs, target port counts, attack signatures).
 - Aligned containment and remediation recommendations adhering to **NIST SP 800-61 Rev. 2** (Computer Security Incident Handling Guide) and **CIS Critical Security Controls v8**.
@@ -250,7 +266,7 @@ Live packet capture requires access to raw network sockets or specialized captur
 
 ### 1. Unified Kali-Style Terminal Launcher (Recommended)
 
-NetScan includes an interactive terminal launcher ([netscan.py](file:///c:/Users/DevLab/Documents/GitHub/EST/Soutenance%20Project/netscan.py)) with automated environment bootstrapping, dependency checks, and driver validation:
+NetScan includes an interactive terminal launcher ([netscan.py](netscan.py)) with automated environment bootstrapping, dependency checks, and driver validation:
 
 ```bash
 # Windows
@@ -262,6 +278,10 @@ python netscan.py
 chmod +x netscan.sh
 sudo ./netscan.sh
 ```
+
+<p align="center">
+  <img src="assets/nmap_attack_terminal.jpg" alt="Authentic Nmap Attack Terminal Execution" width="75%" />
+</p>
 
 #### Command-Line Flags
 You can bypass the interactive menu by supplying command-line flags:
@@ -292,6 +312,10 @@ Launch the modern web console:
 ```bash
 streamlit run dashboard.py
 ```
+
+<p align="center">
+  <img src="assets/netscan_dashboard.jpg" alt="NetScan Forensic SOC Web Dashboard" width="100%" />
+</p>
 
 The web console provides three unified operational modules:
 
@@ -375,12 +399,17 @@ python test_detection_pcap.py
 
 Both tests validate model convergence, feature scaling, window aggregation boundaries, and anomaly classification rules.
 
+<p align="center">
+  <img src="assets/benchmark_metrics.png" alt="Evaluation on Forensic Benchmark Metrics" width="85%" />
+</p>
+
 ---
 
 ## Repository Structure
 
 ```text
 NetScan/
+├── assets/                     # Architecture diagrams, benchmark graphs & UI previews
 ├── alerting.py                 # Incident management & firewall rule generation
 ├── alerts_history.json         # Persistent JSON audit log for SOC incidents
 ├── dashboard.py                # Streamlit web SOC console & interactive visualizations
@@ -409,4 +438,4 @@ NetScan is developed for legitimate network defense, security monitoring, forens
 
 - **Author**: Mohamed Reda QIYAOUI
 - **GitHub**: [@Medreda-q](https://github.com/Medreda-q)
-- **License**: Released under the terms of the [MIT License](file:///c:/Users/DevLab/Documents/GitHub/EST/Soutenance%20Project/LICENSE). Feel free to use, modify, and distribute this software in accordance with the license conditions.
+- **License**: Released under the terms of the [MIT License](LICENSE). Feel free to use, modify, and distribute this software in accordance with the license conditions.
