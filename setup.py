@@ -1,8 +1,7 @@
 """
 NetScan — Setup & Installation Script
 Author: Mohamed Reda QIYAOUI
-DUT Cybersecurity — Stage d'Initiation (Septembre 2026)
-École Supérieure de Technologie (EST)
+Unsupervised Machine Learning Network Intrusion Detection System (NIDS)
 """
 
 from setuptools import setup, find_packages

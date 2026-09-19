@@ -639,6 +639,7 @@ def detect_window_anomalies(window_df):
     # 3. SYN port scan: >= 5 ports with syn_count >= 5 and ratio >= 0.35
     port_scan_mask = (
         anomalous_mask
+        & (window_df["syn_count"] > 0)
         & (
             (window_df["unique_dst_ports"] >= 15)
             | ((window_df["unique_dst_ports"] >= 8) & (port_diversity_ratio >= 0.60))
@@ -680,7 +681,8 @@ def detect_window_anomalies(window_df):
     HARD_SCAN_MIN_PORTS = 25
     HARD_SCAN_MIN_RATIO = 0.50
     hard_scan_mask = (
-        (
+        (window_df["syn_count"] > 0)
+        & (
             (window_df["unique_dst_ports"] >= HARD_SCAN_MIN_PORTS)
             | ((window_df["unique_dst_ports"] >= 15) & (port_diversity_ratio >= HARD_SCAN_MIN_RATIO))
         )
@@ -688,6 +690,24 @@ def detect_window_anomalies(window_df):
     )
     window_df.loc[hard_scan_mask, "Anomaly"] = -1
     window_df.loc[hard_scan_mask, "Anomaly_Type"] = "Port Scan"
+
+    # ── Hard-coded rule: catch high-volume floods the ML model may miss ──────
+    hard_flood_mask = (
+        (window_df["unique_dst_ports"] <= 5)
+        & (
+            (window_df["syn_count"] >= 30)
+            | (
+                (window_df["packet_count"] >= 500)
+                & (
+                    (window_df.get("avg_packet_length", 0) >= 800)
+                    | (window_df["packet_count"] >= 1200)
+                )
+            )
+        )
+        & (window_df["Anomaly_Type"] == "Normal")
+    )
+    window_df.loc[hard_flood_mask, "Anomaly"] = -1
+    window_df.loc[hard_flood_mask, "Anomaly_Type"] = "Flood / DDoS"
 
     # Suppress statistical outliers that do not match known attack signatures
     window_df.loc[window_df["Anomaly_Type"] == "Normal", "Anomaly"] = 1
@@ -924,6 +944,7 @@ def score_monitoring_window(df_packets, scaler, model, window_size=5):
     # 3. SYN port scan: >= 5 ports with syn_count >= 5 and ratio >= 0.35
     port_scan_mask = (
         anomalous_mask
+        & (window_df["syn_count"] > 0)
         & (
             (window_df["unique_dst_ports"] >= 15)
             | ((window_df["unique_dst_ports"] >= 8) & (port_diversity_ratio >= 0.60))
@@ -959,7 +980,8 @@ def score_monitoring_window(df_packets, scaler, model, window_size=5):
     HARD_SCAN_MIN_PORTS = 25
     HARD_SCAN_MIN_RATIO = 0.50
     hard_scan_mask = (
-        (
+        (window_df["syn_count"] > 0)
+        & (
             (window_df["unique_dst_ports"] >= HARD_SCAN_MIN_PORTS)
             | ((window_df["unique_dst_ports"] >= 15) & (port_diversity_ratio >= HARD_SCAN_MIN_RATIO))
         )
@@ -967,6 +989,24 @@ def score_monitoring_window(df_packets, scaler, model, window_size=5):
     )
     window_df.loc[hard_scan_mask, "Anomaly"] = -1
     window_df.loc[hard_scan_mask, "Anomaly_Type"] = "Port Scan"
+
+    # ── Hard-coded rule: catch high-volume floods the ML model may miss ──────
+    hard_flood_mask = (
+        (window_df["unique_dst_ports"] <= 5)
+        & (
+            (window_df["syn_count"] >= 30)
+            | (
+                (window_df["packet_count"] >= 500)
+                & (
+                    (window_df.get("avg_packet_length", 0) >= 800)
+                    | (window_df["packet_count"] >= 1200)
+                )
+            )
+        )
+        & (window_df["Anomaly_Type"] == "Normal")
+    )
+    window_df.loc[hard_flood_mask, "Anomaly"] = -1
+    window_df.loc[hard_flood_mask, "Anomaly_Type"] = "Flood / DDoS"
 
     # Suppress statistical outliers that do not match known attack signatures
     window_df.loc[window_df["Anomaly_Type"] == "Normal", "Anomaly"] = 1
