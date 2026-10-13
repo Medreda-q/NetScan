@@ -5,7 +5,24 @@ Author: Mohamed Reda QIYAOUI
 Generates executive-ready HTML & printable PDF incident forensic reports.
 """
 
+import base64
 from datetime import datetime
+import os
+
+
+def _get_report_logo_tag() -> str:
+    """Returns an inline base64 image tag for the official NetScan logo."""
+    svg_path = os.path.join(os.path.dirname(__file__), "assets", "netscan_logo.svg")
+    png_path = os.path.join(os.path.dirname(__file__), "assets", "netscan_logo.png")
+    if os.path.exists(svg_path):
+        with open(svg_path, "rb") as f:
+            b64 = base64.b64encode(f.read()).decode("utf-8")
+            return f'<img src="data:image/svg+xml;base64,{b64}" class="header-logo" alt="NetScan Logo" />'
+    elif os.path.exists(png_path):
+        with open(png_path, "rb") as f:
+            b64 = base64.b64encode(f.read()).decode("utf-8")
+            return f'<img src="data:image/png;base64,{b64}" class="header-logo" alt="NetScan Logo" />'
+    return ""
 
 
 def generate_html_incident_report(
@@ -69,6 +86,8 @@ def generate_html_incident_report(
         </tr>
         """
 
+    logo_tag = _get_report_logo_tag()
+
     html = f"""<!DOCTYPE html>
 <html lang="fr">
 <head>
@@ -102,10 +121,20 @@ def generate_html_incident_report(
         .header {{
             display: flex;
             justify-content: space-between;
-            align-items: flex-start;
+            align-items: center;
             border-bottom: 2px solid var(--primary);
             padding-bottom: 20px;
             margin-bottom: 30px;
+        }}
+        .header-brand {{
+            display: flex;
+            align-items: center;
+            gap: 18px;
+        }}
+        .header-logo {{
+            width: 58px;
+            height: 58px;
+            display: block;
         }}
         .header h1 {{
             margin: 0;
@@ -224,9 +253,12 @@ def generate_html_incident_report(
         <button class="btn-print" onclick="window.print()">🖨️ Imprimer ou Enregistrer en PDF</button>
 
         <div class="header">
-            <div>
-                <h1>Rapport d'Incident & d'Analyse Forensic</h1>
-                <p>Système de Détection d'Intrusions Réseau (NIDS NetScan)</p>
+            <div class="header-brand">
+                {logo_tag}
+                <div>
+                    <h1>Rapport d'Incident & d'Analyse Forensic</h1>
+                    <p>Système de Détection d'Intrusions Réseau (NIDS NetScan)</p>
+                </div>
             </div>
             <div class="meta-box">
                 <div><strong>Analyste :</strong> Mohamed Reda QIYAOUI</div>

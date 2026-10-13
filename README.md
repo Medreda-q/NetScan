@@ -1,11 +1,22 @@
-# NetScan — Network Anomaly Detection & Intrusion Prevention System
+<p align="center">
+  <img src="assets/netscan_logo.svg" alt="NetScan Official Logo" width="140" height="140" />
+</p>
 
-[![Python Version](https://img.shields.io/badge/Python-3.8%2B-blue.svg?logo=python&logoColor=white)](https://www.python.org/)
-[![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](https://opensource.org/licenses/MIT)
-[![Platform](https://img.shields.io/badge/Platform-Linux%20%7C%20Windows%20%7C%20macOS-lightgrey.svg)](https://github.com/Medreda-q/NetScan)
-[![Machine Learning](https://img.shields.io/badge/Algorithm-Isolation%20Forest-orange.svg?logo=scikitlearn&logoColor=white)](https://scikit-learn.org/)
-[![Network Engine](https://img.shields.io/badge/Packet%20Engine-Scapy%20%2F%20PyShark-red.svg)](https://scapy.net/)
-[![Interface](https://img.shields.io/badge/Dashboard-Streamlit-FF4B4B.svg?logo=streamlit&logoColor=white)](https://streamlit.io/)
+<h1 align="center">NetScan — Network Anomaly Detection & Intrusion Prevention System</h1>
+
+<p align="center">
+  <b>Autonomous AI Network Intrusion Detection & Analysis System (NIDS/NIPS)</b><br>
+  <i>Real-Time Multi-Tier Behavioral Threat Hunting & Microscopic Anomaly Scoring</i>
+</p>
+
+<p align="center">
+  <a href="https://www.python.org/"><img src="https://img.shields.io/badge/Python-3.8%2B-blue.svg?logo=python&logoColor=white" alt="Python Version" /></a>
+  <a href="https://opensource.org/licenses/MIT"><img src="https://img.shields.io/badge/License-MIT-green.svg" alt="License: MIT" /></a>
+  <a href="https://github.com/Medreda-q/NetScan"><img src="https://img.shields.io/badge/Platform-Linux%20%7C%20Windows%20%7C%20macOS-lightgrey.svg" alt="Platform" /></a>
+  <a href="https://scikit-learn.org/"><img src="https://img.shields.io/badge/Algorithm-Isolation%20Forest-orange.svg?logo=scikitlearn&logoColor=white" alt="Machine Learning" /></a>
+  <a href="https://scapy.net/"><img src="https://img.shields.io/badge/Packet%20Engine-Scapy%20%2F%20PyShark-red.svg" alt="Network Engine" /></a>
+  <a href="https://streamlit.io/"><img src="https://img.shields.io/badge/Dashboard-Streamlit-FF4B4B.svg?logo=streamlit&logoColor=white" alt="Interface" /></a>
+</p>
 
 <p align="center">
   <img src="assets/netscan_soc_hero.jpg" alt="NetScan AI SOC Command Center" width="100%" />
@@ -323,7 +334,7 @@ python netscan.py --dashboard
 > **Windows Tip**: If you see `'streamlit' is not recognized`, always use `python -m streamlit run dashboard.py` instead of `streamlit run dashboard.py` directly. The `-m` flag invokes it through your Python environment, bypassing the PATH issue.
 
 <p align="center">
-  <img src="assets/netscan_dashboard.jpg" alt="NetScan Forensic SOC Web Dashboard" width="100%" />
+  <img src="assets/netscan_dashboard.png" alt="NetScan Real-Time Web Console & Anomaly Detector" width="100%" />
 </p>
 
 The web console provides three unified operational modules:
@@ -418,7 +429,7 @@ Both tests validate model convergence, feature scaling, window aggregation bound
 
 ```text
 NetScan/
-├── assets/                     # Architecture diagrams, benchmark graphs & UI previews
+├── assets/                     # Official brand logos (SVG/PNG/ICO), diagrams & UI previews
 ├── alerting.py                 # Incident management & firewall rule generation
 ├── alerts_history.json         # Persistent JSON audit log for SOC incidents
 ├── dashboard.py                # Streamlit web SOC console & interactive visualizations

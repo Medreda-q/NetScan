@@ -168,7 +168,27 @@ assert "Rapport d'Incident & d'Analyse Forensic" in report_html, "Report header 
 assert "192.168.1.50" in report_html, "Attacker IP missing from report"
 assert "Port Scan" in report_html, "Attack vector missing from report"
 assert "@media print" in report_html, "Print CSS stylesheet missing"
-print("    Executive HTML/PDF report generated correctly  [OK]")
+assert "header-logo" in report_html, "Official NetScan logo branding missing from report"
+print("    Executive HTML/PDF report generated correctly with logo  [OK]")
+
+# ── 7. Official NetScan Logo & Branding Assets test ───────────────────────────
+print("\n[7] Verifying NetScan Official Brand Logo & Assets...")
+import os
+from PIL import Image
+
+logo_svg = os.path.join("assets", "netscan_logo.svg")
+logo_png = os.path.join("assets", "netscan_logo.png")
+logo_ico = os.path.join("assets", "netscan_logo.ico")
+
+assert os.path.exists(logo_svg), "Official SVG logo missing: assets/netscan_logo.svg"
+assert os.path.getsize(logo_svg) > 500, "SVG logo file is empty or truncated"
+
+assert os.path.exists(logo_png), "Raster PNG logo missing: assets/netscan_logo.png"
+with Image.open(logo_png) as img:
+    assert img.size[0] >= 128 and img.size[1] >= 128, f"PNG logo resolution too low: {img.size}"
+
+assert os.path.exists(logo_ico), "Icon file missing: assets/netscan_logo.ico"
+print("    assets/netscan_logo.svg, .png, .ico validated  [OK]")
 
 print("\n" + "="*55)
 print("ALL SMOKE TESTS PASSED [OK]")

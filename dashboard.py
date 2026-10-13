@@ -14,6 +14,7 @@ Run with:
 """
 
 import asyncio
+import base64
 import datetime
 import json
 import os
@@ -26,6 +27,9 @@ matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 import pandas as pd
 import streamlit as st
+
+LOGO_PNG = os.path.join(os.path.dirname(__file__), "assets", "netscan_logo.png")
+LOGO_SVG = os.path.join(os.path.dirname(__file__), "assets", "netscan_logo.svg")
 
 # Windows asyncio fix — must be set before importing pyshark
 if os.name == "nt":
@@ -84,7 +88,7 @@ def apply_anomaly_style(df, display_cols):
 
 st.set_page_config(
     page_title="NetScan — Mohamed Reda QIYAOUI | NIDS/IPS",
-    page_icon="🛡️",
+    page_icon=LOGO_PNG if os.path.exists(LOGO_PNG) else "🛡️",
     layout="wide",
     initial_sidebar_state="collapsed",
 )
@@ -142,10 +146,35 @@ st.markdown(
         background: linear-gradient(135deg, #0d0d1a 0%, #1a1040 50%, #0d1a2e 100%);
         border: 1px solid rgba(139, 92, 246, 0.25);
         border-radius: 18px;
-        padding: 2rem 2.5rem 1.8rem;
+        padding: 1.8rem 2.2rem;
         margin-bottom: 1.4rem;
         position: relative;
         overflow: hidden;
+    }
+    .hero-container {
+        display: flex;
+        align-items: center;
+        gap: 1.8rem;
+    }
+    .hero-logo-box {
+        flex-shrink: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    .hero-logo-img {
+        width: 84px;
+        height: 84px;
+        display: block;
+        filter: drop-shadow(0 0 16px rgba(56, 189, 248, 0.5));
+        transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), filter 0.3s ease;
+    }
+    .hero-logo-img:hover {
+        transform: scale(1.08) rotate(3deg);
+        filter: drop-shadow(0 0 24px rgba(99, 102, 241, 0.8));
+    }
+    .hero-text {
+        flex: 1;
     }
     .hero h1 {
         font-size: 2.2rem;
@@ -855,19 +884,41 @@ def render_audit_log_viewer():
 
 
 # ──────────────────────────────────────────────────────────────────────────────
-# HERO HEADER
+# HERO HEADER & BRANDING
 # ──────────────────────────────────────────────────────────────────────────────
 
-st.markdown(
-    """
-    <div class="hero">
-        <div class="badge">DUT Cybersécurité — Mohamed Reda QIYAOUI</div>
-        <h1>NetScan — Network Anomaly Detector</h1>
-        <p>
-            Plateforme de Détection d'Intrusions Réseau développée par <b>Mohamed Reda QIYAOUI</b>.
-            Analyse d'anomalies (Scans de ports, DDoS, paquets malformés) sans signatures préalables via Machine Learning non supervisé (Isolation Forest).
-        </p>
+def get_logo_data_uri() -> str:
+    """Returns data URI of the official NetScan logo for inline HTML embedding."""
+    if os.path.exists(LOGO_SVG):
+        with open(LOGO_SVG, "rb") as f:
+            return f"data:image/svg+xml;base64,{base64.b64encode(f.read()).decode('utf-8')}"
+    elif os.path.exists(LOGO_PNG):
+        with open(LOGO_PNG, "rb") as f:
+            return f"data:image/png;base64,{base64.b64encode(f.read()).decode('utf-8')}"
+    return ""
 
+
+_logo_uri = get_logo_data_uri()
+_logo_html = (
+    f'<div class="hero-logo-box"><img src="{_logo_uri}" class="hero-logo-img" alt="NetScan Official Logo" /></div>'
+    if _logo_uri
+    else ""
+)
+
+st.markdown(
+    f"""
+    <div class="hero">
+        <div class="hero-container">
+            {_logo_html}
+            <div class="hero-text">
+                <div class="badge">DUT Cybersécurité — Mohamed Reda QIYAOUI</div>
+                <h1>NetScan — Network Anomaly Detector</h1>
+                <p>
+                    Plateforme de Détection d'Intrusions Réseau développée par <b>Mohamed Reda QIYAOUI</b>.
+                    Analyse d'anomalies (Scans de ports, DDoS, paquets malformés) sans signatures préalables via Machine Learning non supervisé (Isolation Forest).
+                </p>
+            </div>
+        </div>
     </div>
     """,
     unsafe_allow_html=True,
