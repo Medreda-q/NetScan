@@ -17,7 +17,7 @@ This project implements three complementary anomaly detection components:
 
   Layer 2 — Per-Window / Behavioral (offline & forensic):
       Features  : 5 aggregate statistics per (source IP, time window) group
-      Model     : Isolation Forest (contamination=0.10)
+      Model     : Isolation Forest (contamination=0.02)
       Detects   : port scans, SYN floods, host sweeps — attacks that are
                   invisible at the per-packet level but obvious in aggregate.
 
@@ -25,7 +25,7 @@ This project implements three complementary anomaly detection components:
       Phase 1   : Live Calibration (default: 120s)
                   Captures live interface traffic to learn the normal behavioral
                   baseline for the specific network session. Fits and retains
-                  StandardScaler and IsolationForest (contamination=0.10).
+                  StandardScaler and IsolationForest (contamination=0.02).
       Phase 2   : Continuous Monitoring (every N seconds, default: 5s)
                   Streams live windows, extracts the 5 behavioral features,
                   scores them against the Phase 1 calibrated baseline, and flags
@@ -556,13 +556,13 @@ def detect_window_anomalies(window_df):
        how aggressively we want to flag windows.
     4. Fast — O(n log n), runs in milliseconds even on large captures.
 
-    WHY contamination=0.10 (10%) instead of 0.05?
+    WHY contamination=0.02 (2%) instead of 0.05?
     ----------------------------------------------
-    At the per-window level, a capture with a real attack may have a large
-    fraction of anomalous windows (e.g., if the scan runs for 30 seconds and
-    windows are 5s, that's 6 attack windows). Using 5% might suppress real
-    events. 10% is a safer upper bound; we'd rather see a few false positives
-    in the table than miss the scan entirely during a live demo.
+    At the behavioral window level, hostile traffic represents a sharp,
+    concentrated subset of all sliding windows. Setting contamination to 0.02
+    ensures high specificity by isolating only extreme behavioral outliers
+    (scans and floods) while drastically reducing false alarms on normal bursty
+    web traffic.
 
     Anomaly label logic (domain knowledge applied after ML scoring):
     ----------------------------------------------------------------
@@ -716,7 +716,7 @@ def detect_window_anomalies(window_df):
 # ==============================================================================
 # This section implements the two-phase live detection mode:
 #   Phase 1 (Calibration): capture live traffic to learn a session baseline
-#                          using IsolationForest + StandardScaler (contamination=0.10).
+#                          using IsolationForest + StandardScaler (contamination=0.02).
 #   Phase 2 (Monitoring) : continuously evaluate time windows against the fitted
 #                          baseline and report anomalous windows in real-time.
 # ==============================================================================
@@ -1272,59 +1272,37 @@ def create_alert_record(
     }
 
 
-def load_alerts(filepath=ALERTS_FILE):
-    """Load persistent security alerts from JSON file."""
-    if not os.path.exists(filepath):
-        return []
-    try:
-        with open(filepath, "r", encoding="utf-8") as f:
-            data = json.load(f)
-            if isinstance(data, list):
-                return data
-            return []
-    except Exception:
-        return []
+from alerting import (
+    AUDIT_LOG_FILE,
+    load_security_events,
+    save_security_events,
+    log_security_event,
+    clear_security_events,
+)
+
+ALERTS_FILE = AUDIT_LOG_FILE
 
 
-def save_alerts(alerts, filepath=ALERTS_FILE):
-    """Save security alerts list to JSON file atomically."""
-    try:
-        tmp_file = f"{filepath}.tmp"
-        with open(tmp_file, "w", encoding="utf-8") as f:
-            json.dump(alerts, f, indent=2)
-        if os.path.exists(filepath):
-            os.replace(tmp_file, filepath)
-        else:
-            os.rename(tmp_file, filepath)
-        return True
-    except Exception:
-        return False
+def load_alerts(filepath=None):
+    """Load persistent security alerts from JSON file (delegates to alerting.py)."""
+    return load_security_events(filepath=filepath or ALERTS_FILE)
 
 
-def add_alert(alert_dict, filepath=ALERTS_FILE):
-    """Add a new alert to the persistent audit trail (avoids exact duplicate entries)."""
-    alerts = load_alerts(filepath)
-    for a in alerts:
-        if (
-            a.get("src_address") == alert_dict.get("src_address")
-            and a.get("anomaly_type") == alert_dict.get("anomaly_type")
-            and a.get("time_window") == alert_dict.get("time_window")
-            and alert_dict.get("time_window") is not None
-        ):
-            return alerts
-    alerts.insert(0, alert_dict)
-    alerts = alerts[:500]
-    save_alerts(alerts, filepath)
-    return alerts
+def save_alerts(alerts, filepath=None):
+    """Save security alerts list to JSON file atomically (delegates to alerting.py)."""
+    return save_security_events(alerts, filepath=filepath or ALERTS_FILE)
 
 
-def clear_alerts(filepath=ALERTS_FILE):
-    """Clear all historical alerts."""
-    try:
-        if os.path.exists(filepath):
-            os.remove(filepath)
-    except Exception:
-        pass
+def add_alert(alert_dict, filepath=None):
+    """Add a new alert to the persistent audit trail (delegates to alerting.py)."""
+    target = filepath or ALERTS_FILE
+    log_security_event(alert_dict, filepath=target)
+    return load_security_events(filepath=target)
+
+
+def clear_alerts(filepath=None):
+    """Clear all historical alerts (delegates to alerting.py)."""
+    clear_security_events(filepath=filepath or ALERTS_FILE)
     return []
 
 

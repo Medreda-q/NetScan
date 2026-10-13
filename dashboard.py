@@ -876,7 +876,7 @@ def render_audit_log_viewer():
     """Renders the comprehensive security audit trail and historical intrusion attempts."""
     st.subheader("📋 Journal d'Audit & Historique des Tentatives d'Intrusion")
     st.caption(
-        "Ce module consigne automatiquement chaque tentative d'attaque détectée sur le réseau de la Commune "
+        "Ce module consigne automatiquement chaque tentative d'attaque détectée sur le réseau d'entreprise "
         "(Scans de ports Nmap, Inondations SYN Flood). Les événements sont enregistrés de manière persistante "
         "afin de permettre l'audit de sécurité, l'analyse forensique et l'application immédiate de règles pare-feu."
     )

@@ -23,3 +23,6 @@ matplotlib
 # Interactive dashboard
 streamlit
 
+# Image processing (logo validation & report generator)
+pillow
+

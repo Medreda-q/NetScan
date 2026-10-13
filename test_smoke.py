@@ -94,7 +94,7 @@ print(f"    Normal  (700 pkts, 2 ports, 72B, syn=0)  -> label: '{normal_label}' 
 
 assert scanner_label == "Port Scan",    f"FAIL: scanner labeled '{scanner_label}', expected 'Port Scan'"
 assert flood_label   == "Flood / DDoS", f"FAIL: flood labeled '{flood_label}', expected 'Flood / DDoS'"
-assert normal_label  != "Flood / DDoS", f"FAIL: normal web traffic falsely labeled 'Flood / DDoS'"
+assert normal_label  == "Normal",       f"FAIL: normal web traffic falsely labeled '{normal_label}', expected 'Normal'"
 print("    Detection labels  [OK]")
 
 # ── 4. aggregate_windows logic test ───────────────────────────────────────────
@@ -127,6 +127,9 @@ print("    aggregate_windows()  [OK]")
 # ── 5. Audit Logging & Security Event Management test ────────────────────────
 print("\n[5] Testing Security Audit Logging & Firewall Rule generation...")
 from alerting import log_security_event, load_security_events, generate_firewall_rule
+from detection_engine import add_alert, load_alerts
+import tempfile
+import os
 
 test_evt = {
     "anomaly_type": "Port Scan",
@@ -137,10 +140,62 @@ test_evt = {
 }
 ok, msg = log_security_event(test_evt)
 assert ok, "Audit logging should succeed"
+
+# Firewall rule IP validation checks
 rule = generate_firewall_rule("192.168.1.45")
 assert "192.168.1.45" in rule, "Firewall rule must contain target IP"
+assert "netsh" in rule or "iptables" in rule, "Valid IPv4 must generate firewall rule command"
 print(f"    Firewall rule generated: {rule[:45]}...  [OK]")
-print("    Security audit logging persistence  [OK]")
+
+for invalid_src in ["aa:bb:cc:dd:ee:ff", "abc; rm -rf /", ""]:
+    rule_invalid = generate_firewall_rule(invalid_src)
+    assert rule_invalid.startswith("#"), f"Expected comment '#' for invalid input '{invalid_src}', got: {rule_invalid}"
+    assert "iptables" not in rule_invalid and "netsh" not in rule_invalid, f"Invalid input '{invalid_src}' generated firewall command: {rule_invalid}"
+print("    Firewall rule invalid/non-IP rejection [OK]")
+
+# Test unified Step 2 API: round-trip write/read and deduplication using a temporary file
+with tempfile.NamedTemporaryFile(suffix=".json", delete=False) as tmp_audit:
+    tmp_audit_path = tmp_audit.name
+
+try:
+    if os.path.exists(tmp_audit_path):
+        os.remove(tmp_audit_path)
+
+    evt1 = {
+        "src_address": "10.10.10.50",
+        "anomaly_type": "Port Scan",
+        "time_window": 10.0,
+        "packet_count": 100,
+        "unique_dst_ports": 90,
+    }
+    evt2 = {
+        "src_address": "10.10.10.50",
+        "anomaly_type": "Port Scan",
+        "time_window": 10.0,
+        "packet_count": 105,
+        "unique_dst_ports": 95,
+    }
+
+    ok1, _ = log_security_event(evt1, filepath=tmp_audit_path)
+    assert ok1, "First event logging should succeed"
+    ok2, _ = log_security_event(evt2, filepath=tmp_audit_path)
+    assert ok2, "Second event logging should succeed or report dedup"
+
+    loaded = load_security_events(tmp_audit_path)
+    assert len(loaded) == 1, f"Expected 1 deduped entry, got {len(loaded)}"
+    assert loaded[0]["src_address"] == "10.10.10.50"
+    assert loaded[0]["time_window"] == 10.0
+    assert "firewall_rule" in loaded[0]
+
+    # Verify delegation via detection_engine functions
+    add_alert(evt2, filepath=tmp_audit_path)
+    alerts_delegated = load_alerts(filepath=tmp_audit_path)
+    assert len(alerts_delegated) == 1, f"Expected 1 deduped entry via add_alert, got {len(alerts_delegated)}"
+finally:
+    if os.path.exists(tmp_audit_path):
+        os.remove(tmp_audit_path)
+
+print("    Security audit logging persistence & deduplication [OK]")
 
 # ── 6. Executive Incident Report Generator test ───────────────────────────────
 print("\n[6] Testing Executive Incident Report Generator (HTML/PDF)...")
