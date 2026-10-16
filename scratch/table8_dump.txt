@@ -1,0 +1,14 @@
+Table 8 (Tableau 4.1): 13 rows x 3 cols
+R00: Brique Logicielle | Bibliothèque / Outil | Rôle Opérationnel
+R01: Langage Principal | Python 3.14+ | Développement modulaire orienté sécurité et scripting système.
+R02: Moteur Machine Learning | Scikit-Learn (v1.5) | Implémentation haute performance de l'algorithme IsolationForest.
+R03: Traitement Matriciel | Pandas & NumPy | Découpage des fenêtres temporelles, calculs d'agrégation et vectorisation.
+R04: Inspection Réseau | Pyshark & Scapy | Parsing bas niveau des trames pcap et gestion des sockets bruts.
+R05: Interface Web SOC | Streamlit (v1.38) | Tableau de bord web interactif, visualisations graphiques et filtres.
+R06: Moteur Graphique | Plotly (≥ 5.18.0) & Matplotlib / Seaborn | Visualisation interactive SOC en thème sombre (Plotly) ; génération des matrices de dispersion et tracés des quadrants d'anomalies (Matplotlib / Seaborn).
+R07: Reporting Automatisé | HTML5 / CSS Print | Rendu exécutif forensique prêt pour conversion et impression PDF.
+R08: Journalisation & Audit | JSON Persistant & Subprocess | Enregistrement structuré des incidents (alerts_history.json) et génération de règles pare-feu (netsh / iptables)
+R09: Configuration Déclarative | PyYAML | Externalisation des principaux hyperparamètres et des seuils heuristiques dans config.yaml, chargé par config_loader.py, sans modification du code Python.
+R10: Localisation Trilingue | i18n (i18n.py & locales/) | Interface en français (langue par défaut), anglais et espagnol à partir des catalogues fr.json, en.json et es.json.
+R11: Assurance Qualité & Linting | Ruff | Analyse statique ultra-rapide et respect des normes PEP 8 (configuration .ruff.toml).
+R12: Threat Intelligence & GeoIP | geoip_resolver.py (urllib, ipaddress, functools) | Résolution géographique des IP sources (pays, ville, FAI/ASN), discrimination RFC 1918 et cache LRU.

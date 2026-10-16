@@ -1,0 +1,136 @@
+P0315 [Heading 1]: CHAPITRE IV : IMPLÉMENTATION LOGICIELLE ET OUTILS DÉVELOPPÉS
+P0316 [Heading 2]: 4.1 Environnement et stack technologique
+P0317 [Normal]: L'implémentation de NetScan a été réalisée en langage Python 3 sous Windows (développement et exécution des tests, Python 3.14) ; l'orchestrateur en ligne de commande vise également Kali Linux, plateforme non couverte par le script de tests :
+P0318 [Normal]: Tableau 4.1 : Stack technologique et bibliothèques mobilisées.
+P0319 [Normal]: 4.1.1 Portabilité et prérequis pour l'environnement Windows :
+P0320 [Normal]: Bien qu'initialement conçu sous Linux/Kali, NetScan a été adapté pour fonctionner nativement sous environnement Microsoft Windows, permettant ainsi son déploiement direct sur des postes de travail Windows. L'exécution du mode d'écoute en direct (Live Sniffing) sous Windows requiert l'installation préalable de composants d'interception réseau de bas niveau :
+P0321 [List Paragraph]: • Npcap (ou WinPcap) : Pilote d'injection et de capture de paquets indispensable à l'ouverture des sockets bruts (raw sockets) et au passage de la carte réseau en mode promiscuité sous Windows.
+P0322 [List Paragraph]: • Wireshark / TShark pour Windows : Moteur d'analyse réseau sous-jacent exploité par la bibliothèque Pyshark.
+P0323 [List Paragraph]: • Privilèges d'administration : Le terminal Windows (PowerShell ou Invite de commandes) doit impérativement être exécuté avec des privilèges élevés (« Exécuter en tant qu'administrateur ») afin d'autoriser la capture passive des trames sur l'interface physique.
+P0324 [Normal]: 4.1.2 Configuration déclarative centralisée (config.yaml et config_loader.py) :
+P0325 [Normal]: NetScan sépare strictement la logique applicative des paramètres de détection. Les principaux hyperparamètres et seuils opérationnels sont externalisés dans le fichier config.yaml, ce qui permet de recalibrer le système sans modifier une seule ligne de code Python. Ce fichier regroupe :
+P0326 [List Paragraph]: • Taux de contamination : 0,05 pour la Couche 1 (unitaire) et 0,02 pour la Couche 2 (comportementale), conformément au Tableau 3.3.
+P0327 [List Paragraph]: • Fenêtre temporelle d'agrégation : 5 secondes.
+P0328 [List Paragraph]: • Seuils heuristiques de détection des scans : nombre de ports uniques et ratio de dispersion R.
+P0329 [List Paragraph]: • Seuils de détection des inondations volumétriques (floods).
+P0330 [Normal]: Le nombre d'arbres (n_estimators, fixé à 100 pour chaque couche, Tableau 3.3) reste en revanche défini dans detection_engine.py et n'est pas externalisé dans config.yaml.
+P0331 [Normal]: Le module config_loader.py rechargeant ce fichier de manière transparente à chaque démarrage, toute modification de la configuration est prise en compte dès le lancement suivant. La journalisation applicative est également centralisée : les messages de fonctionnement sont consignés dans logs/netscan.log, distinct du journal d'audit des incidents (alerts_history.json) décrit en section 4.4.
+P0332 [Normal]: 4.1.3 Résilience d'exécution et robustesse sous Windows :
+P0333 [Normal]: Le déploiement sous Windows a nécessité deux mesures de durcissement de l'exécution :
+P0334 [List Paragraph]: • Gestion de l'encodage CP1252 : les terminaux Windows utilisent par défaut le jeu de caractères CP1252, qui ne peut pas représenter les caractères de blocs graphiques Unicode employés initialement pour l'affichage en console ; l'exception UnicodeEncodeError en résultant interrompait l'exécution. Ces blocs ont été remplacés par des caractères ASCII sûrs (#).
+P0335 [List Paragraph]: • Politique asynchrone Windows : la politique WindowsSelectorEventLoopPolicy d'asyncio est prise en charge afin d'assurer la fluidité de la capture réseau PyShark / Scapy.
+P0336 [Normal]: 4.1.4 Empaquetage et standards de qualité du code :
+P0337 [Normal]: Le projet respecte les normes d'empaquetage PEP 517 et PEP 518 : la construction est déclarée dans pyproject.toml et complétée par setup.py, qui expose directement la commande console netscan (point d'entrée netscan = netscan:main). La dépendance plotly>=5.18.0 a été ajoutée dans pyproject.toml. La qualité du code source est contrôlée par le linter Ruff, configuré dans .ruff.toml, qui assure l'analyse statique et le respect des recommandations PEP 8.
+P0338 [Heading 2]: 4.2 L'Orchestrateur CLI Linux/Kali (netscan.py)
+P0339 [Normal]: Conçu spécifiquement pour les terminaux Linux des analystes de sécurité, netscan.py constitue le point d'entrée unifié de la solution :
+P0340 [List Paragraph]: •  Contrôle d'intégrité et privilèges : Vérification proactive de l'UID système (root requis sous Linux pour la capture directe).
+P0341 [List Paragraph]: •  Interface stylisée ANSI : Affichage soigné avec bannière ASCII, coloration dynamique (vert pour les statuts normaux, rouge pour les alertes critiques, cyan pour les étapes d'ingestion).
+P0342 [List Paragraph]: •  Gestion des signaux : Interception gracieuse des interruptions clavier (SIGINT / Ctrl+C) évitant toute corruption de session.
+P0344 [Normal]: Figure 4.1 : Interface en ligne de commande (CLI) de NetScan sous terminal Kali Linux.
+P0345 [Normal]: En mode forensique (option [2] du menu), netscan.py affiche en console un résumé global de l'analyse (Figure 4.2 (a)), puis la synthèse des anomalies de Couche 1 : répartition par type, principales sources suspectes et aperçu des premiers paquets anormaux (Figure 4.2 (b)).
+P0347 [Normal]: Figure 4.2 (a) : Résumé global de l'analyse forensique (Couches 1 et 2).
+P0349 [Normal]: Figure 4.2 (b) : Détail des anomalies de Couche 1 (répartition par type, sources suspectes et aperçu des paquets).
+P0350 [Heading 2]: 4.3 Le Tableau de Bord Web Interactif (dashboard.py)
+P0351 [Normal]: Développé sous Streamlit, le tableau de bord, désigné Centre de Commande SOC, offre une expérience d'analyse visuelle de niveau SOC. Son code suit une architecture frontend modulaire, qui sépare la logique de page, les composants de présentation, les graphiques et le style :
+P0352 [List Paragraph]: • dashboard.py : point d'entrée Streamlit assurant l'orchestration de la page.
+P0353 [List Paragraph]: • ui_components.py : composants d'interface réutilisables.
+P0354 [List Paragraph]: • ui_charts.py : construction des graphiques interactifs Plotly.
+P0355 [List Paragraph]: • assets/css/dashboard.css : feuille de style du design system Cyber Glassmorphic.
+P0356 [Normal]: Le tableau de bord expose les fonctionnalités suivantes :
+P0357 [List Paragraph]: Navigation latérale à cinq pages : Menu du tableau de bord (Analyse Forensique PCAP, Surveillance Live, Centre SOC, Audit & IPS, Paramètres) permettant de basculer entre l'analyse forensique d'un fichier .pcap et la surveillance en direct de l'interface réseau (Figure 4.3 (a)). Avant tout dépôt de capture, la page d'analyse forensique n'affiche que la zone de téléversement (Figure 4.3 (b)).
+P0359 [Normal]: Figure 4.3 (a) : Menu de navigation latéral du tableau de bord (cinq pages).
+P0361 [Normal]: Figure 4.3 (b) : Page d'analyse forensique PCAP à l'état initial (zone de dépôt d'une capture .pcap / .pcapng).
+P0362 [List Paragraph]: Bandeau de Commande à Cinq Indicateurs Clés (KPI) : Cartes de métriques de type HUD, à bordures luminescentes et arrière-plan flouté (backdrop-filter: blur(24px)), affichant en temps réel, notamment, le volume global de paquets examinés, le nombre de trames unitaires anormales et le décompte précis des scans Nmap et attaques DDoS.
+P0364 [Normal]: Figure 4.3 (c) : Bandeau des cinq indicateurs clés (KPI) en tête du Centre SOC (état initial, avant toute analyse).
+P0365 [List Paragraph]: Suite de Graphiques Interactifs Plotly (thème sombre) : Les visualisations du tableau de bord ont été migrées vers Plotly, qui offre le survol, le zoom et l'inspection interactive des points de données. Quatre graphiques composent la vue de supervision :
+P0366 [List Paragraph]: • Série temporelle du taux de paquets SYN : les points d'anomalie sont signalés par des diamants rouge fluorescent, qui mettent en évidence les pics caractéristiques d'un flood.
+P0367 [List Paragraph]: • Diagramme en anneau (donut) : répartition des profils de trafic (SYN Scan, SYN Flood, Normal).
+P0368 [List Paragraph]: • Diagramme en barres horizontales : Top 10 des adresses IP sources, avec mise en relief des hôtes hostiles.
+P0369 [List Paragraph]: • Histogramme des scores de décision d'Isolation Forest : distribution des scores avec marqueur vertical du seuil d'anomalie. Il exploite la colonne continue anomaly_score (issue de model.score_samples()), conservée dans le DataFrame des Couches 1 et 2.
+P0370 [Normal]: À ces quatre graphiques s'ajoute, pour l'analyse forensique de la Couche 1, un nuage de points microscopique (taille de paquet en fonction de l'index du paquet).
+P0372 [Normal]: Figure 4.3 (d) : Inspection microscopique de Niveau 1 : taille des paquets en fonction de leur index (anomalies colorées par type).
+P0374 [Normal]: Figure 4.3 (e) : Liste des paquets anormaux détectés par la Couche 1 (export CSV disponible).
+P0375 [List Paragraph]: Centre de Gestion des Incidents SOC : Table d'alertes interactive, filtrable et triable (analyses PCAP et SOC), dont chaque ligne porte un badge de sévérité (CRITICAL, HIGH, MEDIUM, LOW) et une colonne « Origine Geo » issue du module de Threat Intelligence (section 4.4.2). Une recherche textuelle multi-champs porte simultanément sur l'adresse IP, l'origine géographique et la cible. Le centre propose également la génération de commandes pare-feu de remédiation suggérées (iptables -A INPUT -s <IP> -j DROP sous Linux, netsh advfirewall sous Windows), à appliquer manuellement par l'analyste, et des boutons d'export au format CSV et JSON.
+P0376 [Normal]: Figure 4.3 (f) : Centre SOC : table des incidents avec badges de sévérité et origine géographique.
+P0377 [List Paragraph]: Contextualisation Géographique des Attaquants : L'origine géographique de l'adresse source (par exemple [US] Ashburn, United States (Google Public DNS) ou [LAN] Reseau Prive (Interne)) est affichée sur chaque carte d'incident du flux en direct, qui reste signalée par la pulsation lumineuse, ainsi que dans l'historique du centre de commande SOC. L'analyste qualifie ainsi immédiatement un incident interne ou externe sans quitter l'interface.
+P0378 [List Paragraph]: Design System Cyber Glassmorphic et Alertes Animées : L'interface suit un design épuré, sans aucun emoji : badges de criticité, données en police à chasse fixe (JetBrains Mono) et cartes à effet de verre dépoli. Les alertes en direct sont signalées par une pulsation lumineuse CSS (@keyframes alertPulseGlow, classe .live-alert-pulse). Les micro-animations de chargement reposent sur GSAP (GreenSock), et des écrans squelettes (skeleton shimmer loading) occupent l'interface pendant le calcul.
+P0379 [List Paragraph]: Onglet « Paramètres & Internationalisation » : Un sélecteur de langue (FR / EN / ES) permet de changer dynamiquement la langue de l'interface (français par défaut, anglais, espagnol). Le choix est conservé dans la session Streamlit ; les libellés proviennent du module i18n.py et des catalogues locales/fr.json, locales/en.json et locales/es.json.
+P0380 [Heading 2]: 4.4 Module de Journalisation d’Audit et de Remédiation Pare-feu (alerting.py & alerts_history.json)
+P0381 [Normal]: 4.4.1 Journalisation d'audit et remédiation pare-feu (alerting.py) :
+P0382 [Normal]: Afin de garantir l'intégrité et la persistance des preuves d'intrusion sans dépendre d'une base de données tierce lourde, NetScan intègre le module dédié alerting.py. L'architecture assure la traçabilité et la réponse active :
+P0383 [List Paragraph]: Enregistrement structuré : Chaque incident est consigné dans un journal d'audit local persistant unique (alerts_history.json, chemin absolu résolu à côté du script), avec déduplication sur (IP source, type d'anomalie, fenêtre) et plafond de 1 000 entrées ; les anciennes entrées sont chargées avec des valeurs par défaut pour les champs manquants.
+P0384 [List Paragraph]: Données tracées : Horodatage précis à la milliseconde, adresse IP source, ports ciblés, volumétrie de paquets, ratio de dispersion R et règle heuristique déclenchée.
+P0385 [List Paragraph]: Consultation sécurisée in-app : Dès la connexion de l'administrateur à l'interface, un volet d'audit charge automatiquement l'historique complet des alertes non acquittées pour analyse forensique immédiate.
+Génération Multi-Plateforme de Règles Pare-Feu : Pour chaque adresse IP hostile identifiée, alerting.py synthétise instantanément la commande de blocage : iptables -A INPUT -s <IP> -j DROP sous Linux, et netsh advfirewall firewall add rule name="NetScan-Block-<IP>" dir=in action=block remoteip=<IP> sous Windows. L'adresse source est validée (module ipaddress) avant génération ; une valeur non IP (par exemple une adresse MAC) ne produit aucune règle.
+P0386 [Normal]: 4.4.2 Module d'Enrichissement Géographique et Cyber Threat Intelligence (geoip_resolver.py) :
+P0387 [Normal]: Une adresse IP source n'est pleinement exploitable par l'analyste qu'une fois replacée dans son contexte d'origine. Le module geoip_resolver.py, fondé uniquement sur les bibliothèques standard urllib, ipaddress et functools, associe à chaque adresse source une mention d'origine normalisée. Son fonctionnement repose sur quatre principes :
+P0388 [List Paragraph]: • Discrimination locale des adresses privées : après validation par le module ipaddress, les adresses des sous-réseaux RFC 1918 (10.0.0.0/8, 172.16.0.0/12, 192.168.0.0/16) et de la boucle locale (127.0.0.1) sont identifiées instantanément, sans aucune requête réseau. La mention normalisée est [LAN] Reseau Prive (Interne) ou [HOST] Hote Local.
+P0389 [List Paragraph]: • Résolution des adresses publiques (WAN) : l'interrogation non bloquante d'un point de terminaison REST sécurisé extrait le pays, le code pays (ISO 3166-1 alpha-2), la ville et le fournisseur d'accès Internet ou ASN (champs org / isp), par exemple [US] Ashburn, United States (Google Public DNS). Seules les adresses publiques sont transmises au service tiers.
+P0390 [List Paragraph]: • Cache mémoire LRU : le décorateur @functools.lru_cache(maxsize=2048) supprime la latence lors des flux massifs et élimine les requêtes redondantes vers une même adresse.
+P0391 [List Paragraph]: • Tolérance aux pannes hors-ligne : un délai d'attente strict de 1,5 seconde, assorti d'un repli transparent sur la mention [WAN] Public Externe, garantit que NetScan ne se bloque jamais et que le tableau de bord ne gèle pas, y compris en cas de coupure de la connexion Internet. Les entrées qui ne sont pas des adresses IP valides sont traitées sans interrompre l'analyse.
+P0392 [Normal]: La notation reste volontairement sobre : seuls des tags ASCII normalisés ([LAN], [HOST], [FR], [US], [WAN]) sont employés, à l'exclusion de tout emoji. Le tableau de bord consomme ce module via ui_components.py et dashboard.py (section 4.3).
+P0393 [Heading 2]: 4.5 Moteur Exécutif de Rapports Forensiques (report_generator.py)
+P0394 [Normal]: À l'issue de chaque analyse forensique d'un fichier PCAP, NetScan propose la génération automatisée d'un rapport complet d'incident :
+P0395 [List Paragraph]: •  Rendu vectoriel conforme aux standards de gouvernance documentaire.
+P0396 [List Paragraph]: •  Feuille de style CSS intégrée avec directives @media print pour une conversion immédiate en PDF via le navigateur.
+P0397 [List Paragraph]: •  Synthèse managériale non technique et tableau technique exhaustif (Top 30 des fenêtres temporelles compromises).
+P0398 [List Paragraph]: •  Recommandations opérationnelles de durcissement calquées sur les guides NIST SP 800-61 et CIS Controls (rate-limiting SYN, segmentation VLAN, filtrage des flux d'administration).
+P0399 [Heading 2]: 4.6 Suite d'Assurance Qualité Logicielle (test_smoke.py)
+P0400 [Normal]: Le projet intègre un script de tests de fumée (test_smoke.py), exécuté manuellement (python test_smoke.py), qui vérifie la chaîne logicielle principale sur données synthétiques. Un workflow GitHub Actions (.github/workflows/smoke-test.yml, Python 3.11, tshark installé) est fourni pour l'exécuter à chaque push et pull request ; ses exécutions sur le dépôt distant restent à confirmer. Le script comporte huit étapes de validation, exécutées localement sans capture externe ; elles couvrent notamment :
+P0401 [List Paragraph]: 1.  Vérification des bibliothèques système (pandas, scikit-learn, pyshark, streamlit).
+P0402 [List Paragraph]: 2.  Importation et intégrité du moteur de détection (detection_engine.py).
+P0403 [List Paragraph]: 3.  Validation mathématique sur données synthétiques générées à la volée (200 hôtes normaux, 1 scanner Nmap à 500 ports, 1 flooder volumétrique à 500 paquets avec trames proches de la MTU à 1 058 octets, et 1 source Web intensive légitime de 700 paquets avec N_SYN = 0 dont l'étiquette doit être exactement « Normal » ; ce cas unique ne constitue pas une mesure du taux de faux positifs).
+P0404 [List Paragraph]: 4.  Validation du fenêtrage temporel (5 s) et de l'agrégation par fenêtre (ports uniques, drapeaux SYN).
+P0405 [List Paragraph]: 5.  Validation de la persistance du journal d'audit local (alerts_history.json) : relecture des événements écrits, déduplication sur (IP source, type, fenêtre) via un fichier temporaire, et génération des commandes de blocage pare-feu, y compris le rejet des entrées non IP (adresse MAC, injection shell, chaîne vide).
+P0406 [List Paragraph]: 6.  Validation syntaxique de la structure HTML5 du générateur de rapports.
+P0407 [List Paragraph]: 7.  Validation du module de Threat Intelligence GeoIP (étape « [8] Testing GeoIP Threat Intelligence & Origin Resolution » du script) : discrimination privé / public / boucle locale, traitement des entrées non-IP et intégrité du cache LRU.
+P0409 [Heading 1]: CHAPITRE V : EXPÉRIMENTATION ET VALIDATION
+P0410 [Heading 2]: 5.1 Architecture du Banc d'Essai et Topologie LAN
+P0411 [Normal]: Afin de valider l'opérabilité de NetScan sur du trafic réseau physique réel, l'ensemble des tests expérimentaux a été conduit sur un banc d'essai LAN personnel et isolé.
+L'architecture d'expérimentation mobilise deux postes de travail physiques interconnectés via un commutateur réseau Gigabit Ethernet (Switch LAN Cat 6, 1 Gbps) au sein d'un sous-réseau local de test (192.168.1.0/24) :
+P0412 [List Paragraph]: Poste 1 — Poste Émetteur d'Audit (192.168.1.116) :
+Machine physique sous Kali dédiée aux simulations de tests d'intrusion. Elle embarque les outils d'audit standard, notamment l'exécutable officiel Nmap et des scripts de génération de paquets bruts pour simuler le comportement d'un attaquant interne ou d'un équipement compromis sur le LAN.
+P0414 [List Paragraph]: Figure 5.1 : Configuration réseau du Poste 1 d'Audit (Kali Linux).
+P0415 [List Paragraph]: Poste 2 — Poste de Supervision & Sonde NetScan (192.168.1.107) :
+Station de travail administrative hébergeant la sonde NetScan. Elle est équipée du pilote Npcap (mode compatibilité WinPcap activé et privilèges administrateur) afin d'assurer la capture passive des trames réseau locales en continu sans aucune latence, couplée au tableau de bord web interactif sous Streamlit.
+P0417 [Normal]: Figure 5.2 : Configuration réseau du Poste 2 de Supervision NetScan (Windows).
+P0418 [Heading 2]: 5.2 Scénario 1 : Étalonnage dynamique de la référence et détection d'un scan Nmap furtif en direct
+P0419 [Normal]: Le premier scénario évalue la capacité de NetScan à intercepter en direct une tentative de cartographie réseau non autorisée sur les postes de travail clients du LAN.
+P0420 [Normal]: 1. Protocole d'exécution :
+P0421 [Normal]: La sonde NetScan est démarrée sur le Poste 2 (terminal administrateur) depuis l'orchestrateur CLI, en sélectionnant le mode [1] Surveillance en Direct (Figure 5.3) :
+P0422 [Normal]: python netscan.py   →   netscan > 1
+• Étape d'apprentissage (Phase 1) : Pendant la durée de calibration configurée (120 secondes par défaut), NetScan capture le trafic ambiant et étalonne sa baseline de normalité.
+• Étape de surveillance et d'attaque (Phase 2) : Une fois la baseline active, la surveillance continue démarre avec filtrage local des flux (filter_local_ip).
+P0424 [Normal]: Figure 5.3 : Menu principal de NetScan sur le Poste 2 : sélection du mode [1] Surveillance en Direct (Calibration → Monitoring).
+P0425 [Normal]: Depuis le Poste 1 (192.168.1.116), un balayage furtif semi-ouvert est initié vers le Poste 2 :
+P0426 [Normal]: nmap -sS -T4 -p 1-1000 192.168.1.107
+P0428 [Normal]: Figure 5.4 : Simulation du balayage de reconnaissance furtif (nmap -sS).
+P0429 [Normal]: 2. Observation microscopique (Niveau 1) :
+P0430 [Normal]: Chaque paquet SYN émis par Nmap est strictement conforme aux spécifications du protocole TCP (RFC 793), d'une taille normale d'environ 60 octets. Les mécanismes déterministes et pare-feu locaux ne détectent aucune anomalie au niveau de la trame individuelle.
+P0431 [Normal]: 3. Observation macroscopique (Niveau 2 - Fenêtre fixe de 5 s) :
+P0432 [Normal]: Dès la réception du flux sur la fenêtre temporelle fixe, NetScan calcule les indicateurs comportementaux :
+P0433 [Normal]: Diversité de ports uniques : un très grand nombre de ports distincts sollicités dans la fenêtre de 5 secondes, bien au-delà des seuils des Règles 1 et 4 (valeur relevée : voir Figure 5.5).
+P0434 [Normal]: Ratio de dispersion : Le ratio R = (P_unique/N_pkts) est proche de 1, signalant une dispersion spatiale anormale (valeur relevée : voir Figure 5.5).
+P0435 [Normal]: 4. Décision NetScan :
+P0436 [Normal]: Le modèle Isolation Forest signale la fenêtre comme anormale (prédiction -1) et les règles de qualification du Chapitre III la classent en Port Scan. L'incident est qualifié en « ALERTE CRITIQUE : Port Scan » et notifié en temps réel.
+Résolution de l'attribution IP : Grâce au filtrage automatique du trafic de l'hôte local (filter_local_ip), NetScan discrimine les flux émis par la sonde elle-même et isole avec exactitude l'adresse IP source attaquante (192.168.1.116). L'incident est simultanément consigné dans alerts_history.json et la règle de bannissement Windows (netsh advfirewall) est générée.
+P0438 [Normal]: Figure 5.5 : Détection en direct et qualification de l'alerte Port Scan par NetScan.
+P0439 [Heading 2]: 5.3 Scénario 2 : Détection d'une inondation SYN Flood
+P0440 [Normal]: Le second scénario teste la résilience du système face à une attaque en déni de service par saturation volumétrique.
+P0441 [Normal]: 1. Commande offensive exécutée depuis le Poste 1 (Audit) :
+P0442 [Normal]: hping3 --flood -S -p 80 192.168.1.107
+P0444 [Normal]: Figure 5.6 : Simulation de l'attaque par déni de service volumétrique (hping3 SYN Flood).
+P0445 [Normal]: 2. Observation au Niveau 1 :
+P0446 [Normal]: Les trames sont individuellement banales (paquets SYN répétés vers le port 80).
+P0447 [Normal]: 3. Observation au Niveau 2 :
+P0448 [Normal]: Le volume d'activité augmente brutalement, avec un nombre de paquets très supérieur aux seuils de la Règle 5, concentrés sur un port de destination unique (P_unique = 1) ; le ratio R devient très faible (valeurs relevées : voir Figure 5.7).
+P0449 [Normal]: 4. Décision NetScan :
+P0450 [Normal]: Le modèle signale la fenêtre comme anormale ; les règles de qualification (Règle 2, ou garde-fou de la Règle 5) identifient l'attaque et déclenchent une « ALERTE CRITIQUE : Flood / DDoS ».
+P0451 [Normal]: La détection en temps réel et la génération de l'alerte critique par la sonde NetScan sont illustrées par la Figure 5.7 ci-dessous :
+P0453 [Normal]: Figure 5.7 : Détection en temps réel et qualification de l'alerte Flood / DDoS par NetScan.
+P0454 [Heading 2]: 5.4 Analyse comparative et gains opérationnels
+P0455 [Normal]: La capture d'attaque de l'expérimentation (sample_nmap_attack.pcap) a été injectée dans le moteur NetScan :
+P0456 [List Paragraph]: Les résultats ci-dessous proviennent de ces captures et des scénarios synthétiques du banc de tests (test_smoke.py). Ils ne portent que sur deux scénarios (un scan Nmap -sS et un SYN Flood) et ont une valeur illustrative : les taux de détection et de faux positifs n'ont pas été mesurés sur un jeu de données étiqueté. Une évaluation quantitative (précision, rappel, F1, matrice de confusion) est prévue dans les perspectives.
+P0457 [Normal]: Tableau 5.1 : Synthèse comparative des résultats expérimentaux de détection sur capture hostile (sample_nmap_attack.pcap) et scénarios synthétiques.
+P0458 [Heading 3]: Comparaison Opérationnelle : Modèle Baseline vs NetScan Dual-Layer
+P0459 [Normal]: Tableau 5.2 : Bilan comparatif des capacités de détection : Modèle Baseline vs NetScan.

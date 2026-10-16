@@ -1,0 +1,138 @@
+=== 1. TABLES AUDIT ===
+Total tables found in document: 11
+Table 00: 11 rows x 3 cols | Header/First cell: 'ID'
+Table 01: 5 rows x 4 cols | Header/First cell: 'Risque Identifié'
+Table 02: 1 rows x 1 cols | Header/First cell: '# Exemple de signature Snort détectant une tentative de traversée de répertoire '
+Table 03: 6 rows x 3 cols | Header/First cell: 'Critère d'Évaluation'
+Table 04: 5 rows x 4 cols | Header/First cell: 'Propriété'
+Table 05: 7 rows x 3 cols | Header/First cell: 'Attribut'
+Table 06: 7 rows x 3 cols | Header/First cell: 'Feature Calculée'
+Table 07: 6 rows x 3 cols | Header/First cell: 'Paramètre de Configuration'
+Table 08: 13 rows x 3 cols | Header/First cell: 'Brique Logicielle'
+Table 09: 4 rows x 4 cols | Header/First cell: 'Séquence de Trafic'
+Table 10: 5 rows x 4 cols | Header/First cell: 'Critère d'Évaluation'
+
+=== 2. LISTE DES TABLEAUX (FRONT MATTER) ===
+
+=== 3. TABLEAU CAPTIONS IN BODY ===
+P0215: Tableau 1.1 : Matrice des spécifications fonctionnelles et contraintes techniques de NetScan.
+P0218: Tableau 1.2 : Matrice d'évaluation et de mitigation des risques techniques du projet.
+P0226: Tableau 2.1 : Comparaison synthétique entre détection par signatures et approche par Machine Learning.
+P0277: Tableau 2.2 : Comparaison des propriétés algorithmiques d'Isolation Forest, One-Class SVM et k-Means.
+P0298: Tableau 3.1 : Attributs de la Couche 1 (Length et Timestamp alimentent le modèle ; les autres alimentent les règles d'étiquetage).
+P0303: Tableau 3.2 : Vecteur des métriques comportementales de la Couche 2.
+P0310: Tableau 3.3 : Synthèse comparative des hyperparamètres des deux couches d'Isolation Forest.
+P0318: Tableau 4.1 : Stack technologique et bibliothèques mobilisées.
+P0457: Tableau 5.1 : Synthèse comparative des résultats expérimentaux de détection sur capture hostile (sample_nmap_attack.pcap) et scénarios synthétiques.
+P0459: Tableau 5.2 : Bilan comparatif des capacités de détection : Modèle Baseline vs NetScan.
+
+=== 4. HEADINGS IN BODY ===
+P0190 [Heading 1]: 
+P0191 [Heading 1]: 
+P0192 [Heading 1]: 
+P0193 [Heading 1]: 
+P0194 [Heading 1]: 
+P0195 [Heading 1]: 
+P0196 [Heading 1]: 
+P0197 [Heading 1]: Introduction Générale
+P0203 [Heading 2]: 1.1 Contexte de Surveillance et Environnement Cible
+P0204 [Heading 2]: Dans les réseaux locaux multi-utilisateurs, le réseau local centralise des flux hétérogènes : postes de travail administratifs, serveurs de données centraux, passerelles applicatives métiers et accès Internet. Dans ce contexte où les serveurs hébergent des données critiques, la protection du périmètre interne contre les tentatives de reconnaissance latérale et de déni de service représente un enjeu critique.
+Pour répondre à cette problématique de surveillance proactive, NetScan a été conçu pour s'insérer de manière non intrusive sur le segment réseau local (LAN). Déployée en écoute passive sur le segment réseau cible, la sonde modélise en continu le trafic nominal généré par les postes clients et les échanges inter-serveurs sans impacter la bande passante ni perturber l'exploitation. Cette démarche confronte directement les modèles d'apprentissage automatique à un trafic réseau réaliste, généré sur un banc d'essai LAN personnel.
+P0205 [Heading 2]: 1.2 Démarche méthodologique en laboratoire R&D
+P0213 [Heading 2]: 1.3 Cahier des charges et spécifications fonctionnelles
+P0216 [Heading 2]: 1.4 Matrice d'analyse et de gestion des risques
+P0220 [Heading 1]: CHAPITRE II : ÉTAT DE L'ART ET FONDEMENTS THÉORIQUES
+P0221 [Heading 2]: 2.1 Les systèmes de détection d'intrusion réseau traditionnels
+P0227 [Heading 2]: 2.2 Mécanismes des attaques cibles
+P0228 [Heading 3]: 2.2.1 Le Scan de Ports Furtif (TCP SYN Stealth Scan)
+P0241 [Heading 3]: 2.2.2 L'Inondation par Déni de Service (SYN Flood)
+P0245 [Heading 2]: 2.3 Paradigmes du Machine Learning en sécurité
+P0250 [Heading 2]: 2.4 L'Algorithme Isolation Forest (iForest)
+P0255 [Heading 3]: 2.4.1 Principe des Arbres d'Isolation (iTrees)
+P0266 [Heading 3]: 2.4.2 Formulation Mathématique du Score d'Anomalie
+P0278 [Heading 1]: 
+P0279 [Heading 1]: 
+P0280 [Heading 1]: 
+P0281 [Heading 1]: 
+P0282 [Heading 1]: 
+P0283 [Heading 1]: CHAPITRE III : ARCHITECTURE SYSTÈME ET CONCEPTION TECHNIQUE
+P0284 [Heading 2]: 3.1 Pipeline global de traitement
+P0289 [Heading 2]: 3.2 Ingestion des flux réseau
+P0295 [Heading 2]: 3.3 Ingénierie des caractéristiques (Feature Engineering)
+P0296 [Heading 3]: 3.3.1 Caractéristiques de la Couche 1 (Unitaire)
+P0299 [Heading 3]: 3.3.2 Caractéristiques de la Couche 2 (Comportementale)
+P0305 [Heading 2]: 3.4 Matrice de décision et qualification des menaces
+P0315 [Heading 1]: CHAPITRE IV : IMPLÉMENTATION LOGICIELLE ET OUTILS DÉVELOPPÉS
+P0316 [Heading 2]: 4.1 Environnement et stack technologique
+P0338 [Heading 2]: 4.2 L'Orchestrateur CLI Linux/Kali (netscan.py)
+P0350 [Heading 2]: 4.3 Le Tableau de Bord Web Interactif (dashboard.py)
+P0380 [Heading 2]: 4.4 Module de Journalisation d’Audit et de Remédiation Pare-feu (alerting.py & alerts_history.json)
+P0393 [Heading 2]: 4.5 Moteur Exécutif de Rapports Forensiques (report_generator.py)
+P0399 [Heading 2]: 4.6 Suite d'Assurance Qualité Logicielle (test_smoke.py)
+P0409 [Heading 1]: CHAPITRE V : EXPÉRIMENTATION ET VALIDATION
+P0410 [Heading 2]: 5.1 Architecture du Banc d'Essai et Topologie LAN
+P0418 [Heading 2]: 5.2 Scénario 1 : Étalonnage dynamique de la référence et détection d'un scan Nmap furtif en direct
+P0439 [Heading 2]: 5.3 Scénario 2 : Détection d'une inondation SYN Flood
+P0454 [Heading 2]: 5.4 Analyse comparative et gains opérationnels
+P0458 [Heading 3]: Comparaison Opérationnelle : Modèle Baseline vs NetScan Dual-Layer
+P0461 [Heading 1]: CHAPITRE VI : ANALYSE DES PERFORMANCES, RETOURS D'EXPÉRIENCE ET PERSPECTIVES
+P0462 [Heading 2]: 6.1 Compétences techniques et professionnelles consolidées :
+P0469 [Heading 2]: 6.2 Obstacles techniques rencontrés et arbitrages réalisés
+P0477 [Heading 2]: 6.3 Perspectives d'évolution du système
+P0488 [Heading 1]: CONCLUSION GÉNÉRALE
+P0494 [Heading 1]: BIBLIOGRAPHIE ET WEBOGRAPHIE
+P0495 [Heading 3]: Publications Scientifiques & Normes Fondamentales
+P0501 [Heading 3]: Documentation Technique & Outils Logiciels
+
+=== 5. TABLE DES MATIERES (FRONT MATTER) ===
+P0058: Table des Matières
+P0059: Dédicace
+P0060: Remerciements
+P0061: Résumé / Abstract
+P0062: Liste des Figures
+P0063: Liste des Tableaux
+P0064: Liste des Abréviations
+P0065: Introduction Générale
+P0066: •  Origine et enjeu de sécurité
+P0067: •  Problématique centrale : L'angle mort des signatures face aux scans furtifs
+P0068: •  Objectifs généraux et périmètre du projet NetScan
+P0069: •  Organisation du document
+P0070: Chapitre I : Contexte Opérationnel, Spécifications et Démarche R&D
+P0071: 1.1 - Contexte de surveillance et environnement cible
+P0072: 1.2 - Démarche méthodologique en laboratoire R&D
+P0073: 1.3 - Cahier des charges et spécifications fonctionnelles
+P0074: 1.4 - Matrice d'évaluation et de mitigation des risques techniques
+P0075: Chapitre II : État de l'Art et Fondements Théoriques
+P0076: 2.1 - Les systèmes de détection d'intrusion réseau (NIDS) conventionnels
+P0077: 2.2 - Mécanismes des attaques cibles : Scan Nmap TCP SYN et Floods volumétriques
+P0078: 2.3 - Paradigmes du Machine Learning en sécurité (Supervisé vs Non Supervisé)
+P0079: 2.4 - L'algorithme Isolation Forest (Modélisation mathématique et formulation)
+P0080: Chapitre III : Architecture Système et Conception Technique
+P0081: 3.1 - Pipeline global de traitement des flux
+P0082: 3.2 - Ingestion réseau hybride (Mode direct promiscuité et captures PCAP/PCAPNG)
+P0083: 3.3 - Ingénierie des caractéristiques (Feature Engineering)
+P0084: 3.4 - Matrice de qualification heuristique et typage des menaces
+P0085: Chapitre IV : Implémentation Logicielle et Outils Développés
+P0086: 4.1 - Environnement de développement et stack technologique
+P0087: 4.1.1 - Portabilité et prérequis pour l'environnement Windows
+P0088: 4.1.2 - Configuration déclarative centralisée (config.yaml et config_loader.py)
+P0089: 4.1.3 - Résilience d'exécution et robustesse sous Windows
+P0090: 4.1.4 - Empaquetage et standards de qualité du code
+P0091: 4.2 - Orchestrateur en ligne de commande Linux/Kali (netscan.py)
+P0092: 4.3 - Tableau de bord de supervision SOC interactif (dashboard.py)
+P0093: 4.4 - Module de Journalisation d'Audit et de Remédiation Pare-feu (alerting.py & alerts_history.json)
+P0094: 4.4.1 - Journalisation d'audit et remédiation pare-feu (alerting.py)
+P0095: 4.4.2 - Enrichissement géographique et Threat Intelligence (geoip_resolver.py)
+P0096: 4.5 - Générateur exécutif de rapports d'incident (report_generator.py)
+P0097: 4.6 - Suite d'assurance qualité et tests de fumée (test_smoke.py)
+P0098: Chapitre V : Expérimentation et Validation
+P0099: 5.1 - Architecture du banc d'essai et topologie LAN
+P0100: 5.2 - Scénario 1 : Étalonnage dynamique de la référence et détection d'un scan Nmap furtif en direct
+P0101: 5.3 - Scénario 2 : Détection d'une inondation SYN Flood
+P0102: 5.4 - Analyse comparative et gains opérationnels
+P0103: Chapitre VI : Analyse des Performances, Retours d'Expérience et Perspectives
+P0104: 6.1 - Compétences techniques et professionnelles consolidées
+P0105: 6.2 - Obstacles techniques rencontrés et arbitrages réalisés
+P0106: 6.3 - Perspectives d'évolution du système
+P0107: Conclusion Générale
+P0108: Bibliographie et Webographie
