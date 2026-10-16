@@ -201,12 +201,12 @@ def load_security_events(filepath=None):
 
 def clear_security_events(filepath=None):
     """
-    Clears historical audit trail.
+    Clears historical audit trail by resetting it to an empty list.
     """
     target_path = filepath or AUDIT_LOG_FILE
     try:
-        if os.path.exists(target_path):
-            os.remove(target_path)
+        with open(target_path, "w", encoding="utf-8") as f:
+            json.dump([], f, indent=2)
         return True
     except Exception:
         return False

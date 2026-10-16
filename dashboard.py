@@ -792,18 +792,14 @@ if _active_page == 'audit':
 
     st.write("")
     render_section_header("Audit Trail Persistant", "ALERTS_HISTORY.JSON")
-    if os.path.exists(AUDIT_LOG_FILE):
-        try:
-            with open(AUDIT_LOG_FILE, "r", encoding="utf-8") as f:
-                audit_records = json.load(f)
-            if audit_records:
-                st.dataframe(pd.DataFrame(audit_records), use_container_width=True, height=260)
-            else:
-                st.info("Aucun evenement enregistre dans l'audit trail.")
-        except Exception as e_aud:
-            st.error(f"Erreur de lecture de l'audit log : {e_aud}")
+    audit_records = load_security_events()
+    if audit_records:
+        st.dataframe(pd.DataFrame(audit_records), use_container_width=True, height=260)
     else:
-        st.info("Fichier d'audit introuvable.")
+        render_empty_state(
+            _t("audit_no_events", default="Aucun incident enregistre dans l'audit trail"),
+            "Le journal d'audit est actuellement vide. Les attaques et detections futures seront automatiquement archivees ici.",
+        )
 
 
 # ==============================================================================
