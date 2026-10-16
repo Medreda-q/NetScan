@@ -475,20 +475,20 @@ if _active_page == 'live':
             calib_start = time.time()
             calib_chunks = []
 
-            while (time.time() - calib_start) < calib_dur:
-                if not st.session_state.live_monitoring_active:
-                    st.rerun()
-                elapsed = time.time() - calib_start
-                pb.progress(min(1.0, elapsed / calib_dur))
-                status_box.info(f"Phase 1 -- Calibration : Capture du trafic ({int(calib_dur - elapsed)}s restantes)...")
-                chunk = capture_live_packets(interface=live_iface, timeout=1.5)
-                if not chunk.empty:
-                    calib_chunks.append(chunk)
-
-            calib_df = pd.concat(calib_chunks, ignore_index=True) if calib_chunks else pd.DataFrame(columns=PACKET_COLUMNS)
-            status_box.info("Entrainement de l'Isolation Forest de reference...")
-
             try:
+                while (time.time() - calib_start) < calib_dur:
+                    if not st.session_state.live_monitoring_active:
+                        st.rerun()
+                    elapsed = time.time() - calib_start
+                    pb.progress(min(1.0, elapsed / calib_dur))
+                    status_box.info(f"Phase 1 -- Calibration : Capture du trafic ({int(calib_dur - elapsed)}s restantes)...")
+                    chunk = capture_live_packets(interface=live_iface, timeout=1.5)
+                    if not chunk.empty:
+                        calib_chunks.append(chunk)
+
+                calib_df = pd.concat(calib_chunks, ignore_index=True) if calib_chunks else pd.DataFrame(columns=PACKET_COLUMNS)
+                status_box.info("Entrainement de l'Isolation Forest de reference...")
+
                 scaler, model, _ = calibrate_baseline(calib_df, window_size=win_sz, contamination=0.05)
                 st.session_state.live_scaler = scaler
                 st.session_state.live_model = model
@@ -497,8 +497,13 @@ if _active_page == 'live':
                 status_box.success("Baseline calibree avec succes. Passage en phase d'inference active !")
                 time.sleep(0.8)
                 st.rerun()
+            except (PermissionError, RuntimeError) as pe:
+                st.session_state.live_monitoring_active = False
+                prog_box.empty()
+                status_box.error(str(pe))
             except Exception as e_cal:
                 st.session_state.live_monitoring_active = False
+                prog_box.empty()
                 status_box.error(f"Erreur de calibration : {e_cal}")
 
         # Phase 2: Active Monitoring Loop

@@ -112,30 +112,38 @@ def is_admin():
 
 
 def is_npcap_installed():
-    """Check whether Npcap service or driver exists on Windows."""
+    """Check whether Npcap/WinPcap service or driver exists on Windows."""
     if platform.system() != "Windows":
         return True
     
-    # Check 1: Npcap directory
-    npcap_dir = os.path.join(os.environ.get("SystemRoot", "C:\\Windows"), "System32", "Npcap")
-    if os.path.exists(npcap_dir):
+    # Check 1: Scapy pcap provider
+    try:
+        from scapy.all import conf
+        if getattr(conf, "use_pcap", False):
+            return True
+    except Exception:
+        pass
+
+    # Check 2: Npcap DLLs in System32 / Windows
+    sys32 = os.environ.get("SystemRoot", r"C:\Windows")
+    npcap_paths = [
+        os.path.join(sys32, "System32", "wpcap.dll"),
+        os.path.join(sys32, "System32", "Packet.dll"),
+        os.path.join(sys32, "System32", "Npcap", "wpcap.dll"),
+        os.path.join(sys32, "System32", "Npcap", "Packet.dll"),
+        r"C:\Program Files\Npcap\wpcap.dll",
+    ]
+    if any(os.path.exists(p) for p in npcap_paths):
         return True
 
-    # Check 2: Scapy interface discovery
-    try:
-        from scapy.all import get_if_list
-        if len(get_if_list()) > 0:
-            return True
-    except Exception:
-        pass
-
-    # Check 3: sc query npcap
-    try:
-        res = subprocess.run(["sc", "query", "npcap"], capture_output=True, text=True)
-        if "RUNNING" in res.stdout or "STATE" in res.stdout:
-            return True
-    except Exception:
-        pass
+    # Check 3: sc query npcap or npf service
+    for svc in ("npcap", "npf"):
+        try:
+            res = subprocess.run(["sc", "query", svc], capture_output=True, text=True)
+            if "RUNNING" in res.stdout or "STATE" in res.stdout:
+                return True
+        except Exception:
+            pass
 
     return False
 
@@ -144,37 +152,18 @@ def install_npcap_windows():
     """Offer automatic installation of Npcap on Windows."""
     print(f"\n{Colors.CYAN}[*] Démarrage de l'installation du pilote Npcap...{Colors.RESET}")
 
-    # Méthode 1 : Tenter via winget si disponible
-    winget_path = None
-    try:
-        res = subprocess.run(["where", "winget"], capture_output=True, text=True)
-        if res.returncode == 0:
-            winget_path = "winget"
-    except Exception:
-        pass
-
-    if winget_path:
-        print(f"{Colors.CYAN}[*] Tentative d'installation via winget...{Colors.RESET}")
-        try:
-            cmd = ["winget", "install", "Insecure.Npcap", "--accept-package-agreements", "--accept-source-agreements"]
-            ret = subprocess.call(cmd)
-            if ret == 0:
-                print(f"{Colors.GREEN}[+] Npcap installé avec succès via winget !{Colors.RESET}")
-                return True
-        except Exception as e:
-            print(f"{Colors.YELLOW}[!] Échec de l'installation via winget : {e}{Colors.RESET}")
-
-    # Méthode 2 : Télécharger l'installateur officiel
     import tempfile
     import urllib.request
 
-    installer_url = "https://npcap.com/dist/npcap-1.80.exe"
+    installer_url = "https://npcap.com/dist/npcap-1.89.exe"
     temp_dir = tempfile.gettempdir()
     installer_path = os.path.join(temp_dir, "npcap_installer.exe")
 
     print(f"{Colors.CYAN}[*] Téléchargement de l'installateur Npcap officiel depuis {installer_url}...{Colors.RESET}")
     try:
-        urllib.request.urlretrieve(installer_url, installer_path)
+        req = urllib.request.Request(installer_url, headers={"User-Agent": "Mozilla/5.0 NetScan-Downloader"})
+        with urllib.request.urlopen(req) as resp, open(installer_path, "wb") as out_f:
+            out_f.write(resp.read())
         print(f"{Colors.GREEN}[+] Téléchargement terminé ! Lancement de l'installateur...{Colors.RESET}")
         print(f"{Colors.BOLD}{Colors.YELLOW}>> IMPORTANT : Cochez 'Install Npcap in WinPcap API-compatible Mode' lors de l'installation <<{Colors.RESET}")
         
@@ -208,7 +197,7 @@ def check_driver_health(verbose=True):
             print(f"{Colors.CYAN}[*] Pilote de capture Npcap :{Colors.RESET} {'Installé [OK]' if installed else 'INTROUVABLE [!]'}")
         
         if not installed:
-            print(f"\n{Colors.YELLOW}[!] Windows nécessite Npcap (compatibilité WinPcap) pour la capture réseau en direct.{Colors.RESET}")
+            print(f"\n{Colors.YELLOW}[!] Windows nécessite le pilote Npcap (mode WinPcap API-compatible) pour la capture en direct.{Colors.RESET}")
             ans = input("Souhaitez-vous télécharger et installer Npcap automatiquement ? [O/n] : ").strip().lower()
             if ans in ("", "o", "oui", "y", "yes"):
                 installed = install_npcap_windows()
@@ -234,7 +223,13 @@ def check_driver_health(verbose=True):
 
 def action_live_monitoring():
     """Launch terminal-based live detection engine."""
-    check_driver_health(verbose=False)
+    if platform.system() == "Windows" and not is_npcap_installed():
+        installed = check_driver_health(verbose=True)
+        if not installed:
+            print(f"\n{Colors.RED}[!] Surveillance en direct indisponible sans pilote Npcap.{Colors.RESET}")
+            print(f"{Colors.YELLOW}[*] Conseil : Utilisez l'option [2] pour exécuter l'analyse forensique sur un fichier PCAP sans driver.{Colors.RESET}")
+            return
+
     from detection_engine import get_available_interfaces, run_live_detection
 
     print(f"\n{Colors.BOLD}{Colors.CYAN}--- Mode Surveillance en Direct (Calibration → Monitoring) ---{Colors.RESET}")

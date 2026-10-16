@@ -71,3 +71,7 @@ ConnectionResetError: [WinError 10054] An existing connection was forcibly close
 2026-10-16 09:44:26  INFO      config_loader — Config loaded from C:\Users\DevLab\Documents\GitHub\Personal Projects\NetScan\config.yaml
 2026-10-16 09:44:26  INFO      config_loader — Logging initialised — level=INFO  file=logs/netscan.log
 2026-10-16 09:46:48  INFO      config_loader — Logging initialised — level=INFO  file=logs/netscan.log
+2026-10-16 09:53:22  INFO      config_loader — Config loaded from C:\Users\DevLab\Documents\GitHub\Personal Projects\NetScan\config.yaml
+2026-10-16 09:53:22  INFO      config_loader — Logging initialised — level=INFO  file=logs/netscan.log
+2026-10-16 09:53:25  INFO      config_loader — Config loaded from C:\Users\DevLab\Documents\GitHub\Personal Projects\NetScan\config.yaml
+2026-10-16 09:53:25  INFO      config_loader — Logging initialised — level=INFO  file=logs/netscan.log
