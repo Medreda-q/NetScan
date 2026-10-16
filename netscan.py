@@ -6,13 +6,13 @@ Author: Mohamed Reda QIYAOUI
 Kali-Style Terminal Launcher & Automatic Environment Bootstrapper
 """
 
-import sys
+import argparse
+import logging
 import os
 import platform
 import subprocess
-import argparse
+import sys
 import time
-import logging
 
 # Suppress noisy Scapy startup warnings
 logging.getLogger("scapy.runtime").setLevel(logging.ERROR)
@@ -165,8 +165,8 @@ def install_npcap_windows():
             print(f"{Colors.YELLOW}[!] Échec de l'installation via winget : {e}{Colors.RESET}")
 
     # Méthode 2 : Télécharger l'installateur officiel
-    import urllib.request
     import tempfile
+    import urllib.request
 
     installer_url = "https://npcap.com/dist/npcap-1.80.exe"
     temp_dir = tempfile.gettempdir()
@@ -276,11 +276,11 @@ def action_live_monitoring():
 def action_pcap_forensics(pcap_path=None):
     """Run full offline Layer 1 & Layer 2 forensics on a PCAP file."""
     from detection_engine import (
-        extract_features,
-        detect_anomalies,
-        analyze_anomalies,
         aggregate_windows,
+        analyze_anomalies,
+        detect_anomalies,
         detect_window_anomalies,
+        extract_features,
     )
 
     if not pcap_path:
@@ -368,8 +368,8 @@ def action_run_diagnostics():
 
 def action_view_audit_log():
     """Display persistent security incident audit log from terminal."""
-    from detection_engine import load_alerts, clear_alerts
     from alerting import generate_firewall_rule
+    from detection_engine import clear_alerts, load_alerts
 
     alerts = load_alerts()
     print(f"\n{Colors.BOLD}{Colors.CYAN}--- Journal d'Audit & Historique des Incidents NetScan ---{Colors.RESET}")

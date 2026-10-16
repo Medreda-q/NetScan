@@ -1,0 +1,987 @@
+/* ==========================================================================
+   NetScan — SOC Glassmorphic Command Center
+   Author: Mohamed Reda QIYAOUI
+   Design: Dark cyber dashboard with teal/cyan accents, glassmorphism,
+           monospace data, animated HUD elements, Plotly dark charts.
+   ========================================================================== */
+
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap');
+
+/* --------------------------------------------------------------------------
+   DESIGN TOKENS
+   -------------------------------------------------------------------------- */
+:root {
+  /* Backgrounds */
+  --bg-void:       #050709;
+  --bg-dark:       #07090e;
+  --bg-panel:      rgba(11, 17, 26, 0.82);
+  --bg-card:       rgba(15, 23, 42, 0.72);
+  --bg-card-hover: rgba(30, 41, 59, 0.85);
+  --bg-elevated:   rgba(20, 30, 48, 0.65);
+
+  /* Borders */
+  --border-glass:       rgba(45, 212, 191, 0.12);
+  --border-glass-hover: rgba(45, 212, 191, 0.4);
+  --border-subtle:      rgba(255, 255, 255, 0.05);
+
+  /* Palette: Teal / Cyan / Slate */
+  --teal-300: #5eead4;
+  --teal-400: #2dd4bf;
+  --teal-500: #14b8a6;
+  --teal-600: #0d9488;
+  --cyan-300: #67e8f9;
+  --cyan-400: #22d3ee;
+  --cyan-500: #06b6d4;
+  --slate-600: #475569;
+  --slate-700: #334155;
+  --slate-800: #1e293b;
+  --slate-900: #0f172a;
+
+  /* Text */
+  --text-main:  #f1f5f9;
+  --text-muted: #94a3b8;
+  --text-dim:   #64748b;
+  --text-ghost: #475569;
+
+  /* Semantic colors */
+  --danger:   #f87171;
+  --danger-bg: rgba(248, 113, 113, 0.10);
+  --warning:  #fb923c;
+  --warning-bg: rgba(251, 146, 60, 0.10);
+  --safe:     #34d399;
+  --safe-bg:  rgba(52, 211, 153, 0.10);
+  --info:     #38bdf8;
+
+  /* Shadows */
+  --shadow-card: 0 8px 32px -8px rgba(0, 0, 0, 0.6);
+  --shadow-glow-teal: 0 0 20px rgba(45, 212, 191, 0.15);
+
+  /* Transitions */
+  --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* --------------------------------------------------------------------------
+   BASE APP CHROME
+   -------------------------------------------------------------------------- */
+.stApp {
+  background:
+    radial-gradient(ellipse 80% 60% at 10% 20%, rgba(13, 148, 136, 0.06) 0%, transparent 60%),
+    radial-gradient(ellipse 60% 50% at 90% 80%, rgba(6, 182, 212, 0.04) 0%, transparent 60%),
+    linear-gradient(180deg, #07090e 0%, #050709 100%) !important;
+  color: var(--text-main);
+  font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif !important;
+}
+
+/* Subtle grid overlay */
+.stApp::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  background-image:
+    linear-gradient(rgba(45, 212, 191, 0.015) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(45, 212, 191, 0.015) 1px, transparent 1px);
+  background-size: 80px 80px;
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* Hide all Streamlit chrome */
+header[data-testid="stHeader"] {
+  display: none !important;
+  visibility: hidden !important;
+  height: 0px !important;
+}
+
+.stDeployButton,
+[data-testid="stDeployButton"],
+button[kind="header-deploy"],
+button[data-testid="baseButton-header"] {
+  display: none !important;
+  visibility: hidden !important;
+}
+
+#MainMenu,
+[data-testid="stToolbar"],
+[data-testid="stStatusWidget"],
+[data-testid="stDecoration"],
+[data-testid="stHeaderActionElements"] {
+  display: none !important;
+  visibility: hidden !important;
+}
+
+footer {
+  display: none !important;
+  visibility: hidden !important;
+}
+
+/* Remove default top padding */
+.block-container {
+  padding-top: 1rem !important;
+}
+
+/* --------------------------------------------------------------------------
+   SIDEBAR NAVIGATION
+   -------------------------------------------------------------------------- */
+section[data-testid="stSidebar"] {
+  background:
+    linear-gradient(180deg, rgba(7, 9, 14, 0.97) 0%, rgba(5, 7, 9, 0.99) 100%) !important;
+  border-right: 1px solid var(--border-glass) !important;
+  min-width: 260px !important;
+  max-width: 280px !important;
+  width: 280px !important;
+  transform: none !important;
+  transition: none !important;
+}
+
+/* Hide sidebar collapse/expand toggle — always visible */
+button[data-testid="stSidebarCollapseButton"],
+[data-testid="collapsedControl"],
+button[kind="sidebarCollapse"] {
+  display: none !important;
+}
+
+section[data-testid="stSidebar"] > div:first-child {
+  padding-top: 0.6rem;
+}
+
+/* Sidebar hero header */
+.sidebar-hero {
+  text-align: center;
+  padding: 1rem 0.6rem 0.8rem;
+}
+
+.sidebar-hero img {
+  border-radius: 12px;
+  filter: drop-shadow(0 0 12px rgba(45, 212, 191, 0.25));
+}
+
+.sidebar-hero-badge {
+  display: inline-block;
+  font-size: 0.55rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  color: var(--teal-400);
+  background: rgba(45, 212, 191, 0.08);
+  border: 1px solid rgba(45, 212, 191, 0.25);
+  border-radius: 20px;
+  padding: 0.2rem 0.7rem;
+  margin-bottom: 0.6rem;
+  text-transform: uppercase;
+}
+
+.sidebar-hero-title {
+  font-size: 1.15rem;
+  font-weight: 800;
+  color: var(--teal-400);
+  line-height: 1.3;
+  margin-bottom: 0.45rem;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+}
+
+.sidebar-hero-sub {
+  font-size: 0.62rem;
+  color: var(--text-muted);
+  line-height: 1.4;
+  margin-bottom: 0.3rem;
+}
+
+.sidebar-hero-author {
+  font-size: 0.76rem;
+  font-weight: 600;
+  color: #94a3b8;
+  letter-spacing: 0.03em;
+  margin-top: 0.35rem;
+}
+
+/* Radio nav items */
+section[data-testid="stSidebar"] [data-testid="stRadio"] > div {
+  gap: 4px !important;
+}
+
+section[data-testid="stSidebar"] [data-testid="stRadio"] label {
+  display: flex !important;
+  align-items: center !important;
+  padding: 0.65rem 1rem !important;
+  margin: 2px 0 !important;
+  border-radius: 8px !important;
+  font-size: 0.88rem !important;
+  font-weight: 500 !important;
+  font-family: 'Plus Jakarta Sans', sans-serif !important;
+  color: var(--text-muted) !important;
+  transition: all 0.2s var(--ease-out-expo) !important;
+  cursor: pointer !important;
+  border: 1px solid transparent !important;
+  width: 100% !important;
+}
+
+section[data-testid="stSidebar"] [data-testid="stRadio"] label:hover {
+  background: rgba(45, 212, 191, 0.06) !important;
+  color: var(--teal-300) !important;
+  border-color: rgba(45, 212, 191, 0.12) !important;
+}
+
+/* Active / selected radio item */
+section[data-testid="stSidebar"] [data-testid="stRadio"] label[data-checked="true"],
+section[data-testid="stSidebar"] [data-testid="stRadio"] label:has(input:checked) {
+  background: rgba(45, 212, 191, 0.10) !important;
+  color: var(--teal-400) !important;
+  font-weight: 600 !important;
+  border-color: rgba(45, 212, 191, 0.3) !important;
+  box-shadow: inset 3px 0 0 var(--teal-400);
+}
+
+/* --------------------------------------------------------------------------
+   COMPLETELY HIDE ALL RADIO DOTS / CIRCLES IN SIDEBAR (SURGICAL)
+   -------------------------------------------------------------------------- */
+section[data-testid="stSidebar"] [data-testid="stRadio"] [class*="etak9234"],
+section[data-testid="stSidebar"] [data-testid="stRadio"] [class*="etak9235"],
+section[data-testid="stSidebar"] [data-testid="stRadio"] [data-testid="stRadioOption"] [class*="etak9234"],
+section[data-testid="stSidebar"] [data-testid="stRadio"] [data-testid="stRadioOption"] [class*="etak9235"],
+section[data-testid="stSidebar"] [data-testid="stRadio"] div:has(> [data-testid="stMarkdownContainer"]) > div:first-child,
+section[data-testid="stSidebar"] [data-testid="stRadio"] div:has(> [data-testid="stMarkdownContainer"]) > span:first-child,
+section[data-testid="stSidebar"] [data-testid="stRadio"] input[type="radio"] {
+  display: none !important;
+  visibility: hidden !important;
+  width: 0 !important;
+  height: 0 !important;
+  min-width: 0 !important;
+  min-height: 0 !important;
+  max-width: 0 !important;
+  max-height: 0 !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  opacity: 0 !important;
+  border: none !important;
+  outline: none !important;
+  box-shadow: none !important;
+  background: transparent !important;
+  pointer-events: none !important;
+  position: absolute !important;
+}
+
+section[data-testid="stSidebar"] [data-testid="stRadio"] [data-testid="stMarkdownContainer"],
+section[data-testid="stSidebar"] [data-testid="stRadio"] [data-testid="stMarkdownContainer"] > p {
+  display: block !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  color: inherit !important;
+  font-size: 0.9rem !important;
+  font-weight: inherit !important;
+  line-height: 1.4 !important;
+  width: 100% !important;
+}
+
+/* Sidebar selectbox (language) */
+section[data-testid="stSidebar"] .stSelectbox > div > div {
+  background: var(--bg-card) !important;
+  border: 1px solid var(--border-glass) !important;
+  border-radius: 8px !important;
+  color: var(--text-main) !important;
+  font-size: 0.85rem !important;
+}
+
+/* Sidebar dividers */
+section[data-testid="stSidebar"] hr {
+  border-color: rgba(255, 255, 255, 0.06) !important;
+  margin: 1rem 0 !important;
+}
+
+/* --------------------------------------------------------------------------
+   HERO / COMMAND BAR
+   -------------------------------------------------------------------------- */
+.netscan-hero {
+  background:
+    linear-gradient(135deg, rgba(11, 17, 26, 0.92) 0%, rgba(13, 148, 136, 0.08) 60%, rgba(6, 182, 212, 0.06) 100%);
+  border: 1px solid var(--border-glass);
+  border-radius: 16px;
+  padding: 1.2rem 2rem;
+  margin-bottom: 1.2rem;
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  box-shadow:
+    var(--shadow-card),
+    inset 0 1px 0 rgba(255, 255, 255, 0.06);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  position: relative;
+  overflow: hidden;
+}
+
+.netscan-hero::before {
+  content: "";
+  position: absolute;
+  top: -60%;
+  right: -15%;
+  width: 300px;
+  height: 300px;
+  background: radial-gradient(circle, rgba(20, 184, 166, 0.10) 0%, transparent 70%);
+  filter: blur(50px);
+  pointer-events: none;
+}
+
+.netscan-hero::after {
+  content: "";
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent 0%, var(--teal-400) 50%, transparent 100%);
+  opacity: 0.25;
+}
+
+.hero-content {
+  display: flex;
+  align-items: center;
+  gap: 1.4rem;
+}
+
+.hero-logo-box img {
+  width: 56px;
+  height: 56px;
+  filter: drop-shadow(0 0 14px rgba(45, 212, 191, 0.5));
+  transition: transform 0.4s var(--ease-out-expo), filter 0.4s ease;
+}
+
+.hero-logo-box img:hover {
+  transform: scale(1.06) rotate(3deg);
+  filter: drop-shadow(0 0 22px rgba(56, 189, 248, 0.7));
+}
+
+.hero-title-group h1 {
+  font-size: 1.6rem;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  margin: 0;
+  background: linear-gradient(90deg, #ffffff 0%, #2dd4bf 55%, #22d3ee 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  line-height: 1.2;
+}
+
+.hero-title-group p {
+  color: var(--text-muted);
+  font-size: 0.82rem;
+  margin: 0.15rem 0 0 0;
+  max-width: 560px;
+  line-height: 1.4;
+}
+
+.hero-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  background: rgba(20, 184, 166, 0.12);
+  border: 1px solid rgba(45, 212, 191, 0.30);
+  color: var(--teal-400);
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  padding: 2px 10px;
+  border-radius: 9999px;
+  text-transform: uppercase;
+  margin-bottom: 0.25rem;
+}
+
+/* Right side: status + clock */
+.hero-right {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  flex-shrink: 0;
+}
+
+.hero-status-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 5px 14px;
+  background: rgba(11, 17, 26, 0.90);
+  border: 1px solid rgba(52, 211, 153, 0.30);
+  border-radius: 9999px;
+  font-size: 0.76rem;
+  font-weight: 600;
+  color: var(--safe);
+  font-family: 'JetBrains Mono', monospace;
+  letter-spacing: 0.04em;
+}
+
+.status-dot {
+  width: 7px;
+  height: 7px;
+  background: var(--safe);
+  border-radius: 50%;
+  box-shadow: 0 0 8px var(--safe);
+  animation: pulse-dot 2s infinite ease-in-out;
+}
+
+@keyframes pulse-dot {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.4; transform: scale(0.8); }
+}
+
+.hero-clock {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.82rem;
+  font-weight: 500;
+  color: var(--text-dim);
+  letter-spacing: 0.03em;
+  padding: 4px 12px;
+  background: rgba(11, 17, 26, 0.80);
+  border: 1px solid var(--border-subtle);
+  border-radius: 8px;
+}
+
+/* --------------------------------------------------------------------------
+   KPI GRID — SOC Metric Cards
+   -------------------------------------------------------------------------- */
+.kpi-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(155px, 1fr));
+  gap: 0.8rem;
+  margin: 0.8rem 0 1.2rem 0;
+}
+
+.kpi-card {
+  background: var(--bg-panel);
+  border: 1px solid var(--border-glass);
+  border-radius: 12px;
+  padding: 0.9rem 1rem;
+  text-align: center;
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  transition: all 0.3s var(--ease-out-expo);
+  position: relative;
+  overflow: hidden;
+}
+
+.kpi-card::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 50%;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--teal-400), transparent);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.kpi-card:hover {
+  transform: translateY(-2px);
+  border-color: rgba(45, 212, 191, 0.35);
+  box-shadow: 0 8px 24px -6px rgba(20, 184, 166, 0.18);
+}
+
+.kpi-card:hover::before {
+  opacity: 1;
+}
+
+.kpi-val {
+  font-size: 1.65rem;
+  font-weight: 800;
+  display: block;
+  font-family: 'JetBrains Mono', monospace;
+  line-height: 1.1;
+  margin-bottom: 0.25rem;
+}
+
+.kpi-lbl {
+  font-size: 0.68rem;
+  color: var(--text-dim);
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  font-weight: 600;
+  line-height: 1.3;
+}
+
+/* KPI color modifiers */
+.kpi-danger  { color: var(--danger);  text-shadow: 0 0 14px rgba(248, 113, 113, 0.30); }
+.kpi-warning { color: var(--warning); text-shadow: 0 0 14px rgba(251, 146, 60, 0.30); }
+.kpi-teal    { color: var(--teal-400); text-shadow: 0 0 14px rgba(45, 212, 191, 0.30); }
+.kpi-cyan    { color: var(--cyan-400); text-shadow: 0 0 14px rgba(34, 211, 238, 0.30); }
+.kpi-safe    { color: var(--safe);    text-shadow: 0 0 14px rgba(52, 211, 153, 0.30); }
+
+/* Threat Level Pill */
+.threat-level-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 12px;
+  border-radius: 9999px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.threat-level-low      { background: var(--safe-bg);    border: 1px solid rgba(52,211,153,0.3);  color: var(--safe); }
+.threat-level-medium   { background: rgba(250,204,21,0.10); border: 1px solid rgba(250,204,21,0.3); color: #facc15; }
+.threat-level-high     { background: var(--warning-bg); border: 1px solid rgba(251,146,60,0.3); color: var(--warning); }
+.threat-level-critical { background: var(--danger-bg);  border: 1px solid rgba(248,113,113,0.3); color: var(--danger);
+  animation: threat-pulse 1.5s infinite ease-in-out;
+}
+
+@keyframes threat-pulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(248, 113, 113, 0.3); }
+  50%      { box-shadow: 0 0 12px 4px rgba(248, 113, 113, 0.15); }
+}
+
+/* --------------------------------------------------------------------------
+   SECTION HEADERS
+   -------------------------------------------------------------------------- */
+.section-header {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  margin: 1rem 0 0.6rem 0;
+}
+
+.section-header h3 {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--text-main);
+  margin: 0;
+  letter-spacing: -0.01em;
+}
+
+.section-header .section-line {
+  flex: 1;
+  height: 1px;
+  background: linear-gradient(90deg, var(--border-glass), transparent);
+}
+
+.section-header .section-tag {
+  font-size: 0.65rem;
+  font-weight: 600;
+  font-family: 'JetBrains Mono', monospace;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text-ghost);
+  padding: 2px 8px;
+  border: 1px solid var(--border-subtle);
+  border-radius: 4px;
+}
+
+/* --------------------------------------------------------------------------
+   GLASS PANEL (Charts / Content Wrappers)
+   -------------------------------------------------------------------------- */
+.glass-panel {
+  background: var(--bg-panel);
+  border: 1px solid var(--border-glass);
+  border-radius: 14px;
+  padding: 1.2rem 1.4rem;
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  margin-bottom: 1rem;
+  transition: border-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+.glass-panel:hover {
+  border-color: var(--border-glass-hover);
+  box-shadow: 0 8px 28px -8px rgba(0, 0, 0, 0.5);
+}
+
+.glass-panel-title {
+  font-size: 0.78rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text-dim);
+  margin-bottom: 0.8rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.glass-panel-title .dot-indicator {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--teal-400);
+  box-shadow: 0 0 6px var(--teal-400);
+}
+
+/* --------------------------------------------------------------------------
+   GLASSMORPHIC TABS
+   -------------------------------------------------------------------------- */
+.stTabs [data-baseweb="tab-list"] {
+  gap: 0.4rem !important;
+  background: rgba(11, 17, 26, 0.75) !important;
+  border: 1px solid var(--border-glass) !important;
+  border-radius: 12px !important;
+  padding: 0.35rem 0.4rem !important;
+  backdrop-filter: blur(16px) !important;
+}
+
+.stTabs [data-baseweb="tab"] {
+  border-radius: 9px !important;
+  color: var(--text-dim) !important;
+  font-weight: 600 !important;
+  font-size: 0.84rem !important;
+  padding: 0.55rem 1.2rem !important;
+  transition: all 0.25s var(--ease-out-expo) !important;
+  border: 1px solid transparent !important;
+}
+
+.stTabs [data-baseweb="tab"]:hover {
+  color: var(--text-main) !important;
+  background: rgba(45, 212, 191, 0.06) !important;
+}
+
+.stTabs [aria-selected="true"] {
+  background: linear-gradient(135deg, rgba(20, 184, 166, 0.18) 0%, rgba(6, 182, 212, 0.12) 100%) !important;
+  color: #ffffff !important;
+  border: 1px solid rgba(45, 212, 191, 0.35) !important;
+  box-shadow: 0 4px 16px -4px rgba(20, 184, 166, 0.25) !important;
+}
+
+.stTabs [data-baseweb="tab-highlight"] {
+  display: none !important;
+}
+
+/* --------------------------------------------------------------------------
+   THREAT / INCIDENT CARDS
+   -------------------------------------------------------------------------- */
+.threat-card {
+  background: var(--bg-panel);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 12px;
+  padding: 1rem 1.2rem;
+  margin-bottom: 0.7rem;
+  transition: all 0.25s var(--ease-out-expo);
+  backdrop-filter: blur(14px);
+  position: relative;
+}
+
+.threat-card:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+}
+
+.threat-critical { border-left: 3px solid var(--danger); }
+.threat-high     { border-left: 3px solid var(--warning); }
+.threat-medium   { border-left: 3px solid #facc15; }
+
+.mitigation-code {
+  background: rgba(11, 17, 26, 0.95);
+  border: 1px solid rgba(45, 212, 191, 0.20);
+  border-radius: 8px;
+  padding: 0.6rem 0.8rem;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.78rem;
+  color: var(--teal-400);
+  margin-top: 0.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  overflow-x: auto;
+}
+
+/* --------------------------------------------------------------------------
+   EMPTY STATE / SKELETON CARDS
+   -------------------------------------------------------------------------- */
+.empty-state {
+  text-align: center;
+  padding: 3rem 2rem;
+  color: var(--text-dim);
+}
+
+.empty-state-icon {
+  font-size: 2.5rem;
+  margin-bottom: 0.8rem;
+  opacity: 0.4;
+  display: block;
+}
+
+.empty-state h4 {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  margin: 0 0 0.3rem 0;
+}
+
+.empty-state p {
+  font-size: 0.82rem;
+  color: var(--text-dim);
+  margin: 0;
+  max-width: 420px;
+  margin-left: auto;
+  margin-right: auto;
+  line-height: 1.5;
+}
+
+/* Skeleton shimmer */
+.skeleton-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(155px, 1fr));
+  gap: 0.8rem;
+  margin: 1rem 0;
+}
+
+.skeleton-card {
+  background: var(--bg-panel);
+  border: 1px solid var(--border-subtle);
+  border-radius: 12px;
+  padding: 1rem;
+  position: relative;
+  overflow: hidden;
+}
+
+.skeleton-card::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg,
+    transparent 0%,
+    rgba(45, 212, 191, 0.04) 50%,
+    transparent 100%);
+  animation: skeleton-shimmer 2s infinite ease-in-out;
+}
+
+@keyframes skeleton-shimmer {
+  0%   { transform: translateX(-100%); }
+  100% { transform: translateX(100%); }
+}
+
+.skeleton-bar {
+  background: rgba(255, 255, 255, 0.04);
+  border-radius: 4px;
+  margin-bottom: 0.4rem;
+}
+
+.skeleton-bar-lg  { width: 60%; height: 28px; }
+.skeleton-bar-sm  { width: 80%; height: 10px; }
+
+/* Skeleton chart placeholder */
+.skeleton-chart {
+  background: var(--bg-panel);
+  border: 1px solid var(--border-subtle);
+  border-radius: 14px;
+  height: 280px;
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.skeleton-chart::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg,
+    transparent 0%,
+    rgba(45, 212, 191, 0.03) 50%,
+    transparent 100%);
+  animation: skeleton-shimmer 2.5s infinite ease-in-out;
+}
+
+.skeleton-chart-label {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.72rem;
+  color: var(--text-ghost);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  z-index: 1;
+}
+
+/* --------------------------------------------------------------------------
+   BUTTONS
+   -------------------------------------------------------------------------- */
+.stButton > button {
+  background: linear-gradient(135deg, var(--teal-600) 0%, var(--teal-500) 100%) !important;
+  color: #ffffff !important;
+  border: 1px solid rgba(45, 212, 191, 0.35) !important;
+  border-radius: 10px !important;
+  font-weight: 600 !important;
+  font-size: 0.84rem !important;
+  padding: 0.5rem 1.2rem !important;
+  transition: all 0.25s var(--ease-out-expo) !important;
+  box-shadow: 0 4px 14px -3px rgba(13, 148, 136, 0.35) !important;
+}
+
+.stButton > button:hover {
+  transform: translateY(-1px) !important;
+  box-shadow: 0 6px 20px rgba(20, 184, 166, 0.5) !important;
+  border-color: var(--teal-400) !important;
+}
+
+.stDownloadButton > button {
+  background: rgba(30, 41, 59, 0.80) !important;
+  border: 1px solid var(--border-glass) !important;
+  color: var(--text-main) !important;
+  border-radius: 10px !important;
+  font-weight: 600 !important;
+  font-size: 0.84rem !important;
+  transition: all 0.25s var(--ease-out-expo) !important;
+}
+
+.stDownloadButton > button:hover {
+  background: rgba(45, 212, 191, 0.12) !important;
+  border-color: var(--teal-400) !important;
+  color: #ffffff !important;
+  transform: translateY(-1px) !important;
+}
+
+/* --------------------------------------------------------------------------
+   TABLES (Streamlit DataFrames)
+   -------------------------------------------------------------------------- */
+div[data-testid="stDataFrame"] {
+  border: 1px solid var(--border-glass);
+  border-radius: 12px;
+  overflow: hidden;
+  background: rgba(11, 17, 26, 0.75);
+}
+
+/* --------------------------------------------------------------------------
+   FILE UPLOADER
+   -------------------------------------------------------------------------- */
+div[data-testid="stFileUploader"] {
+  background: rgba(11, 17, 26, 0.60);
+  border: 2px dashed rgba(45, 212, 191, 0.18);
+  border-radius: 14px;
+  padding: 1rem;
+  transition: border-color 0.25s ease, background 0.25s ease;
+}
+
+div[data-testid="stFileUploader"]:hover {
+  border-color: var(--teal-400);
+  background: rgba(20, 184, 166, 0.04);
+}
+
+/* --------------------------------------------------------------------------
+   SELECTBOX / TEXT INPUT
+   -------------------------------------------------------------------------- */
+div[data-baseweb="select"] > div {
+  background: var(--bg-panel) !important;
+  border-color: var(--border-glass) !important;
+  border-radius: 10px !important;
+}
+
+div[data-baseweb="input"] > div {
+  background: var(--bg-panel) !important;
+  border-color: var(--border-glass) !important;
+  border-radius: 10px !important;
+}
+
+/* --------------------------------------------------------------------------
+   PLOTLY CHART CONTAINERS
+   -------------------------------------------------------------------------- */
+div[data-testid="stPlotlyChart"] {
+  border: 1px solid var(--border-glass);
+  border-radius: 14px;
+  overflow: hidden;
+  background: var(--bg-panel);
+  padding: 0.4rem;
+}
+
+/* --------------------------------------------------------------------------
+   STREAMLIT ALERTS / INFO BOXES
+   -------------------------------------------------------------------------- */
+div[data-testid="stAlert"] {
+  border-radius: 10px !important;
+  border: 1px solid var(--border-glass) !important;
+  background: var(--bg-panel) !important;
+}
+
+/* --------------------------------------------------------------------------
+   FOOTER
+   -------------------------------------------------------------------------- */
+.netscan-footer {
+  text-align: center;
+  margin-top: 2rem;
+  padding: 1.2rem 0;
+  border-top: 1px solid rgba(45, 212, 191, 0.08);
+  color: var(--text-ghost);
+  font-size: 0.76rem;
+  letter-spacing: 0.02em;
+}
+
+.netscan-footer a {
+  color: var(--teal-400);
+  text-decoration: none;
+}
+
+/* --------------------------------------------------------------------------
+   SCROLLBAR
+   -------------------------------------------------------------------------- */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--bg-dark);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--slate-700);
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--slate-600);
+}
+
+/* --------------------------------------------------------------------------
+   RESPONSIVE
+   -------------------------------------------------------------------------- */
+@media (max-width: 768px) {
+  .netscan-hero {
+    flex-direction: column;
+    gap: 0.8rem;
+    padding: 1rem 1.2rem;
+    text-align: center;
+  }
+
+  .hero-content {
+    flex-direction: column;
+    gap: 0.6rem;
+  }
+
+  .hero-right {
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  .hero-title-group h1 {
+    font-size: 1.2rem;
+  }
+
+  .kpi-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .kpi-val {
+    font-size: 1.3rem;
+  }
+}
+
+/* --------------------------------------------------------------------------
+   LIVE FEED PULSE ANIMATION
+   -------------------------------------------------------------------------- */
+@keyframes alertPulseGlow {
+  0% {
+    box-shadow: 0 0 0 0 rgba(248, 113, 113, 0.45);
+    border-color: rgba(248, 113, 113, 0.8);
+  }
+  70% {
+    box-shadow: 0 0 0 10px rgba(248, 113, 113, 0);
+    border-color: rgba(248, 113, 113, 0.3);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(248, 113, 113, 0);
+    border-color: rgba(248, 113, 113, 0.2);
+  }
+}
+
+.live-alert-pulse {
+  animation: alertPulseGlow 2.2s infinite ease-out;
+}
+

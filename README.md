@@ -339,16 +339,16 @@ python netscan.py --dashboard
 
 The web console provides three unified operational modules:
 
-1. **📦 Analyse de Capture (PCAP)**:
+1. ** Analyse de Capture (PCAP)**:
    - Drag-and-drop `.pcap` or `.pcapng` files for deep analysis.
    - Microscopic Layer 1 inspection (retransmissions, RST spikes, packet size distribution).
    - Macroscopic Layer 2 behavioral charts (interactive 2D scatter plots of port diversity vs. packet counts).
    - Direct export of executive incident reports.
-2. **📡 Surveillance Réseau en Direct (Live)**:
+2. ** Surveillance Réseau en Direct (Live)**:
    - Select any detected physical or virtual network interface.
    - Configure calibration time and surveillance window durations.
    - Real-time stream scoring with dynamic alert tables and live incident logging.
-3. **🔔 Centre de Notifications & Historique des Incidents**:
+3. ** Centre de Notifications & Historique des Incidents**:
    - Filter incidents by severity (`CRITICAL`, `HIGH`, `MEDIUM`) or IP address.
    - View recommended firewall isolation commands.
    - Export audit logs to CSV or clear history.

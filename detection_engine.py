@@ -54,16 +54,20 @@ DEPENDENCIES
 import asyncio
 import datetime
 import json
+import logging
 import os
 import sys
 import time
 import uuid
+from typing import Optional
 
 import numpy as np
 import pandas as pd
+import pyshark
 from sklearn.ensemble import IsolationForest
 from sklearn.preprocessing import StandardScaler
-import pyshark
+
+logger = logging.getLogger(__name__)
 
 # ──────────────────────────────────────────────────────────────────────────────
 # WINDOWS ASYNCIO COMPATIBILITY FIX
@@ -285,23 +289,21 @@ def extract_features(pcap_file):
 
     except Exception as e:
         use_pyshark = False
-        print(f"[Notice] pyshark unavailable ({e}). Falling back to native scapy parser...")
+        logger.warning("pyshark unavailable (%s) — falling back to scapy parser", e)
 
     # 2. Fallback: scapy native reader (pure Python, requires no external tshark binary)
     if not use_pyshark or len(data) == 0:
         data = []
         try:
-            import logging
-            logging.getLogger("scapy.runtime").setLevel(logging.ERROR)
             from scapy.all import rdpcap
-
             packets = rdpcap(pcap_file)
             for pkt in packets:
                 row = _parse_scapy_packet(pkt)
                 if row is not None:
                     data.append(row)
+            logger.info("Scapy fallback parsed %d packets from %s", len(data), pcap_file)
         except Exception as e_scapy:
-            print(f"Error extracting packets with scapy: {e_scapy}")
+            logger.error("Failed to parse %s with scapy: %s", pcap_file, e_scapy)
 
     return pd.DataFrame(data, columns=PACKET_COLUMNS)
 
@@ -342,6 +344,7 @@ def detect_anomalies(data):
     model = IsolationForest(contamination=0.05, random_state=42)
     data = data.copy()
     data["Anomaly"] = model.fit_predict(scaled_features)
+    data["anomaly_score"] = model.score_samples(scaled_features)
     # fit_predict returns: -1 = anomaly, +1 = normal
 
     # Assign human-readable anomaly type labels using domain knowledge
@@ -416,7 +419,7 @@ def analyze_anomalies(data):
     if not top_src.empty:
         print(f"\n  Top sources suspectes :")
         for ip, cnt in top_src.items():
-            bar = "█" * min(cnt // max(1, total // 20), 20)
+            bar = "#" * min(cnt // max(1, total // 20), 20)
             print(f"    {ip:<25} {cnt:>5,} paquets  {bar}")
 
     # ── Aperçu des 5 premiers paquets anormaux ────────────────────────────────
@@ -614,6 +617,7 @@ def detect_window_anomalies(window_df):
     # Fit and predict with Isolation Forest
     model = IsolationForest(contamination=0.02, random_state=42)
     window_df["Anomaly"] = model.fit_predict(scaled_features)
+    window_df["anomaly_score"] = model.score_samples(scaled_features)
 
     # Initialize all windows as 'Normal'
     window_df["Anomaly_Type"] = "Normal"
@@ -1274,10 +1278,10 @@ def create_alert_record(
 
 from alerting import (
     AUDIT_LOG_FILE,
-    load_security_events,
-    save_security_events,
-    log_security_event,
     clear_security_events,
+    load_security_events,
+    log_security_event,
+    save_security_events,
 )
 
 ALERTS_FILE = AUDIT_LOG_FILE

@@ -8,10 +8,15 @@ Provides persistent local audit logging for all detected intrusion attempts
 
 import ipaddress
 import json
+import logging
 import os
 import sys
 import uuid
 from datetime import datetime
+from typing import Any, Optional
+
+logger = logging.getLogger(__name__)
+
 
 AUDIT_LOG_FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)), "alerts_history.json")
 CONFIG_FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)), "config.json")
@@ -131,8 +136,10 @@ def log_security_event(alert_data, filepath=None):
 
     ok = save_security_events(events, target_path)
     if ok:
+        logger.info("Alert logged: type=%s src=%s id=%s", anomaly_type, src_address, alert_id)
         return True, "Événement consigné dans le journal d'audit local."
     else:
+        logger.error("Failed to write alert to %s", target_path)
         return False, "Erreur d'écriture du journal d'audit."
 
 
@@ -147,6 +154,7 @@ def save_security_events(events, filepath=None):
             os.replace(tmp_file, target_path)
         else:
             os.rename(tmp_file, target_path)
+        logger.debug("Audit log saved: %d events → %s", len(events), target_path)
         return True
     except Exception:
         return False

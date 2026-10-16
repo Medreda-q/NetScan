@@ -19,10 +19,17 @@ scikit-learn
 
 # Plotting
 matplotlib
+plotly>=5.18.0
 
 # Interactive dashboard
 streamlit
 
 # Image processing (logo validation & report generator)
 pillow
+
+# Configuration file support
+pyyaml
+
+# Linting (dev)
+ruff
 

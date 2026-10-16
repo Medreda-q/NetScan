@@ -1,0 +1,79 @@
+﻿# =============================================================================
+# NetScan — Configuration File
+# Author: Mohamed Reda QIYAOUI
+#
+# All tunable parameters live here. Edit values without touching any .py file.
+# The application reloads this file at startup automatically.
+# =============================================================================
+
+# ── General ──────────────────────────────────────────────────────────────────
+app:
+  version: "1.0.0"
+  default_language: "fr"          # "fr" | "en" | "es"
+  log_level: "INFO"               # DEBUG | INFO | WARNING | ERROR
+  log_file: "logs/netscan.log"    # set to null to disable file logging
+
+# ── Layer 1 — Per-Packet Anomaly Detection ────────────────────────────────────
+layer1:
+  contamination: 0.05             # Expected anomaly fraction (0.01–0.20)
+  random_state: 42
+  features:
+    - "Length"
+    - "Timestamp"
+
+# ── Layer 2 — Windowed Behavioural Detection ──────────────────────────────────
+layer2:
+  contamination: 0.02             # Lower = fewer, higher-confidence detections
+  random_state: 42
+  window_size_seconds: 5          # Bucket size in seconds (1–30)
+  features:
+    - "packet_count"
+    - "avg_packet_length"
+    - "unique_dst_ports"
+    - "unique_dst_ips"
+    - "syn_count"
+
+  # ── Port Scan detection thresholds ─────────────────────────────────────────
+  scan:
+    min_packets: 2                # Minimum packets to consider a window
+    broad_sweep_ports: 15         # >= N distinct ports → broad scan
+    stealth_min_ports: 8          # >= N ports + ratio ≥ stealth_ratio → stealth
+    stealth_ratio: 0.60
+    syn_min_ports: 5              # >= N ports + syn_count ≥ syn_min → SYN scan
+    syn_count_min: 5
+    syn_ratio_min: 0.35
+    hard_scan_min_ports: 25       # Hard-coded rule: always flag ≥ N ports
+    hard_scan_min_ratio: 0.50
+
+  # ── Flood / DDoS detection thresholds ──────────────────────────────────────
+  flood:
+    syn_flood_min: 15             # syn_count ≥ N → SYN flood
+    syn_flood_ratio_min: 8        # syn_count ≥ N AND ratio ≥ syn_ratio_trigger
+    syn_ratio_trigger: 0.20
+    volumetric_min_packets: 400   # packet_count ≥ N + narrow ports → volumetric
+    volumetric_max_ports: 3
+    volumetric_min_avg_len: 900   # avg_packet_length ≥ N → amplification
+    volumetric_extreme_pkt: 1200  # OR packet_count ≥ N regardless of size
+    hard_flood_syn_min: 30        # Hard-coded rule
+    hard_flood_pkt_min: 500
+    hard_flood_avg_len_min: 800
+    hard_flood_extreme_pkt: 1200
+
+# ── Live Calibrate-Then-Monitor ───────────────────────────────────────────────
+live:
+  calibration_seconds: 120        # Duration of Phase 1 baseline capture
+  monitor_window_seconds: 5       # Phase 2 evaluation interval
+  exclude_local_ip: true          # Filter out analyst machine traffic
+
+# ── Alerting & Audit Log ─────────────────────────────────────────────────────
+alerting:
+  log_file: "alerts_history.json"
+  max_entries: 1000               # Cap the audit trail at N events
+  auto_firewall_rule: true        # Generate firewall command on every alert
+
+# ── Dashboard UI ─────────────────────────────────────────────────────────────
+dashboard:
+  page_title: "NetScan — NIDS/IPS"
+  max_packets_display: 5000       # Max rows to show in the anomaly table
+  chart_height: 340
+

@@ -1,0 +1,71 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.backends.legacy:build"
+
+[project]
+name = "netscan"
+version = "1.0.0"
+description = "Dual-Layer Unsupervised ML Network Intrusion Detection System (NIDS)"
+readme = "README.md"
+license = { text = "MIT" }
+authors = [{ name = "Mohamed Reda QIYAOUI", email = "m.qiyaoui@student.est.ma" }]
+keywords = ["network", "security", "intrusion-detection", "anomaly", "machine-learning", "isolation-forest"]
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+    "Topic :: Security",
+    "Topic :: System :: Networking :: Monitoring",
+]
+requires-python = ">=3.9"
+dependencies = [
+    "pandas>=1.5",
+    "scikit-learn>=1.2",
+    "pyshark>=0.6",
+    "scapy>=2.5",
+    "matplotlib>=3.6",
+    "plotly>=5.18",
+    "streamlit>=1.28",
+    "pillow>=9.0",
+    "pyyaml>=6.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "ruff>=0.4",
+    "pytest>=7.4",
+    "pytest-cov>=4.1",
+]
+
+[project.urls]
+Homepage = "https://github.com/Medreda-q/NetScan"
+Repository = "https://github.com/Medreda-q/NetScan"
+Issues = "https://github.com/Medreda-q/NetScan/issues"
+
+[project.scripts]
+netscan = "netscan:main"
+
+[tool.setuptools]
+py-modules = ["detection_engine", "dashboard", "netscan", "alerting", "report_generator", "i18n", "config_loader"]
+
+[tool.ruff]
+target-version = "py39"
+line-length = 100
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "UP", "ANN"]
+ignore = [
+    "ANN101",  # self type annotation not needed
+    "ANN102",  # cls type annotation not needed
+    "E501",    # line too long (handled per file)
+]
+
+[tool.pytest.ini_options]
+testpaths = ["tests", "."]
+python_files = ["test_*.py"]
+python_classes = ["Test*"]
+python_functions = ["test_*"]
+

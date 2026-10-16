@@ -1,0 +1,28 @@
+﻿# Ruff linting configuration for NetScan
+# Run: ruff check .
+# Fix:  ruff check . --fix
+
+target-version = "py39"
+line-length = 100
+
+[lint]
+select = [
+    "E",   # pycodestyle errors
+    "W",   # pycodestyle warnings
+    "F",   # pyflakes
+    "I",   # isort
+    "UP",  # pyupgrade
+]
+ignore = [
+    "E501",   # line too long (handled case-by-case)
+    "E402",   # module import not at top of file (needed for asyncio fix)
+    "F401",   # imported but unused (some are conditional imports)
+    "UP007",  # Use X | Y for union types (Python 3.9 compat)
+]
+
+[lint.isort]
+known-first-party = ["detection_engine", "alerting", "netscan", "report_generator", "i18n", "config_loader"]
+
+[lint.per-file-ignores]
+"test_*.py" = ["ANN", "S101"]  # no type hints / assert in tests
+

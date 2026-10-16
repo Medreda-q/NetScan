@@ -4,8 +4,9 @@ Author: Mohamed Reda QIYAOUI
 Unsupervised Machine Learning Network Intrusion Detection System (NIDS)
 """
 
-from setuptools import setup, find_packages
 import os
+
+from setuptools import find_packages, setup
 
 readme_path = os.path.join(os.path.dirname(__file__), "README.md")
 long_description = ""

@@ -6,8 +6,8 @@ Generates executive-ready HTML & printable PDF incident forensic reports.
 """
 
 import base64
-from datetime import datetime
 import os
+from datetime import datetime
 
 
 def _get_report_logo_tag() -> str:
@@ -250,7 +250,7 @@ def generate_html_incident_report(
 </head>
 <body>
     <div class="report-container">
-        <button class="btn-print" onclick="window.print()">🖨️ Imprimer ou Enregistrer en PDF</button>
+        <button class="btn-print" onclick="window.print()">Imprimer ou Enregistrer en PDF</button>
 
         <div class="header">
             <div class="header-brand">
