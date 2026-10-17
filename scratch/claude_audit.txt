@@ -1,0 +1,460 @@
+================================================================================
+AUDIT: Rapport_NetScan_FINAL_CORRIGE.docx (Claude)
+================================================================================
+
+Total paragraphs: 506
+Total tables:     11
+Total images (rels): 23
+
+------------------------------------------------------------
+ALL HEADINGS:
+------------------------------------------------------------
+  P0013 [Heading 1      ]  << EMPTY HEADING
+  P0014 [Heading 1      ] Dédicace
+  P0026 [Heading 1      ] Remerciements
+  P0043 [Heading 1      ] Résumé
+  P0049 [Heading 1      ] Abstract
+  P0058 [Heading 1      ] Table des Matières
+  P0110 [Heading 1      ] Liste des Figures
+  P0134 [Heading 1      ] Liste des Tableaux
+  P0150 [Heading 1      ] Liste des Abréviations
+  P0190 [Heading 1      ] Introduction Générale
+  P0195 [Heading 1      ] CHAPITRE I : CONTEXTE OPÉRATIONNEL, SPÉCIFICATIONS ET DÉMARCHE R&D
+  P0196 [Heading 2      ] 1.1 Contexte de Surveillance et Environnement Cible
+  P0198 [Heading 2      ] 1.2 Démarche méthodologique en laboratoire R&D
+  P0206 [Heading 2      ] 1.3 Cahier des charges et spécifications fonctionnelles
+  P0209 [Heading 2      ] 1.4 Matrice d'analyse et de gestion des risques
+  P0213 [Heading 1      ] CHAPITRE II : ÉTAT DE L'ART ET FONDEMENTS THÉORIQUES
+  P0214 [Heading 2      ] 2.1 Les systèmes de détection d'intrusion réseau traditionnels
+  P0220 [Heading 2      ] 2.2 Mécanismes des attaques cibles
+  P0221 [Heading 3      ] 2.2.1 Le Scan de Ports Furtif (TCP SYN Stealth Scan)
+  P0234 [Heading 3      ] 2.2.2 L'Inondation par Déni de Service (SYN Flood)
+  P0238 [Heading 2      ] 2.3 Paradigmes du Machine Learning en sécurité
+  P0243 [Heading 2      ] 2.4 L'Algorithme Isolation Forest (iForest)
+  P0248 [Heading 3      ] 2.4.1 Principe des Arbres d'Isolation (iTrees)
+  P0259 [Heading 3      ] 2.4.2 Formulation Mathématique du Score d'Anomalie
+  P0271 [Heading 1      ] CHAPITRE III : ARCHITECTURE SYSTÈME ET CONCEPTION TECHNIQUE
+  P0272 [Heading 2      ] 3.1 Pipeline global de traitement
+  P0277 [Heading 2      ] 3.2 Ingestion des flux réseau
+  P0283 [Heading 2      ] 3.3 Ingénierie des caractéristiques (Feature Engineering)
+  P0284 [Heading 3      ] 3.3.1 Caractéristiques de la Couche 1 (Unitaire)
+  P0287 [Heading 3      ] 3.3.2 Caractéristiques de la Couche 2 (Comportementale)
+  P0293 [Heading 2      ] 3.4 Matrice de décision et qualification des menaces
+  P0303 [Heading 1      ] CHAPITRE IV : IMPLÉMENTATION LOGICIELLE ET OUTILS DÉVELOPPÉS
+  P0304 [Heading 2      ] 4.1 Environnement et stack technologique
+  P0326 [Heading 2      ] 4.2 L'Orchestrateur CLI Linux/Kali (netscan.py)
+  P0338 [Heading 2      ] 4.3 Le Tableau de Bord Web Interactif (dashboard.py)
+  P0369 [Heading 2      ] 4.4 Module de Journalisation d’Audit et de Remédiation Pare-feu (alerting.py & alerts_history.json)
+  P0382 [Heading 2      ] 4.5 Moteur Exécutif de Rapports Forensiques (report_generator.py)
+  P0388 [Heading 2      ] 4.6 Suite d'Assurance Qualité Logicielle (test_smoke.py)
+  P0398 [Heading 1      ] CHAPITRE V : EXPÉRIMENTATION ET VALIDATION
+  P0399 [Heading 2      ] 5.1 Architecture du Banc d'Essai et Topologie LAN
+  P0407 [Heading 2      ] 5.2 Scénario 1 : Étalonnage dynamique de la référence et détection d'un scan Nmap furtif en direct
+  P0428 [Heading 2      ] 5.3 Scénario 2 : Détection d'une inondation SYN Flood
+  P0443 [Heading 2      ] 5.4 Analyse comparative et gains opérationnels
+  P0447 [Heading 3      ] Comparaison Opérationnelle : Modèle Baseline vs NetScan Dual-Layer
+  P0450 [Heading 1      ] CHAPITRE VI : ANALYSE DES PERFORMANCES, RETOURS D'EXPÉRIENCE ET PERSPECTIVES
+  P0451 [Heading 2      ] 6.1 Compétences techniques et professionnelles consolidées :
+  P0458 [Heading 2      ] 6.2 Obstacles techniques rencontrés et arbitrages réalisés
+  P0466 [Heading 2      ] 6.3 Perspectives d'évolution du système
+  P0477 [Heading 1      ] CONCLUSION GÉNÉRALE
+  P0483 [Heading 1      ] BIBLIOGRAPHIE ET WEBOGRAPHIE
+  P0484 [Heading 3      ] Publications Scientifiques & Normes Fondamentales
+  P0490 [Heading 3      ] Documentation Technique & Outils Logiciels
+
+  Empty headings found: 1
+  Indices: [13]
+
+------------------------------------------------------------
+HEADING 1 entries:
+------------------------------------------------------------
+  P0013: 
+  P0014: Dédicace
+  P0026: Remerciements
+  P0043: Résumé
+  P0049: Abstract
+  P0058: Table des Matières
+  P0110: Liste des Figures
+  P0134: Liste des Tableaux
+  P0150: Liste des Abréviations
+  P0190: Introduction Générale
+  P0195: CHAPITRE I : CONTEXTE OPÉRATIONNEL, SPÉCIFICATIONS ET DÉMARCHE R&D
+  P0213: CHAPITRE II : ÉTAT DE L'ART ET FONDEMENTS THÉORIQUES
+  P0271: CHAPITRE III : ARCHITECTURE SYSTÈME ET CONCEPTION TECHNIQUE
+  P0303: CHAPITRE IV : IMPLÉMENTATION LOGICIELLE ET OUTILS DÉVELOPPÉS
+  P0398: CHAPITRE V : EXPÉRIMENTATION ET VALIDATION
+  P0450: CHAPITRE VI : ANALYSE DES PERFORMANCES, RETOURS D'EXPÉRIENCE ET PERSPECTIVES
+  P0477: CONCLUSION GÉNÉRALE
+  P0483: BIBLIOGRAPHIE ET WEBOGRAPHIE
+
+  Total Heading 1: 18
+
+------------------------------------------------------------
+CHAPTER HEADING CHECK:
+------------------------------------------------------------
+  CHAPITRE I: P0195 style=Heading 1 OK
+  CHAPITRE II: P0213 style=Heading 1 OK
+  CHAPITRE III: P0271 style=Heading 1 OK
+  CHAPITRE IV: P0303 style=Heading 1 OK
+  CHAPITRE V: P0398 style=Heading 1 OK
+
+------------------------------------------------------------
+FIGURE CAPTIONS:
+------------------------------------------------------------
+  P0111: Figure 1.1 : Topologie du laboratoire d'expérimentation virtualisé (Kali Linux, Sonde NetScan et Metasploitable 2).
+  P0112: Figure 2.1 (a) : Déroulement nominal du Three-Way Handshake TCP.
+  P0113: Figure 2.1 (b) : Détournement du cycle par un scan furtif Nmap TCP SYN (envoi du flag RST).
+  P0114: Figure 2.2 : Mécanisme temporel de l'inondation TCP SYN Flood et saturation de la Backlog Queue.
+  P0115: Figure 2.3 : Partitionnement géométrique de l'espace de données et isolation rapide d'une anomalie par arbre iTree.
+  P0116: Figure 3.1 : Schéma directeur du pipeline d'ingestion et de détection Dual-Layer de NetScan.
+  P0117: Figure 4.1 : Interface en ligne de commande (CLI) de NetScan sous terminal Kali Linux.
+  P0118: Figure 4.2 (a) : Résumé global de l'analyse forensique (Couches 1 et 2).
+  P0119: Figure 4.2 (b) : Détail des anomalies de Couche 1 (répartition par type, sources suspectes, aperçu).
+  P0120: Figure 4.3 (a) : Menu de navigation latéral du tableau de bord (cinq pages).
+  P0121: Figure 4.3 (b) : Page d'analyse forensique PCAP à l'état initial (zone de dépôt d'une capture).
+  P0122: Figure 4.3 (c) : Bandeau des cinq indicateurs clés (KPI) en tête du Centre SOC (état initial, avant toute analyse).
+  P0123: Figure 4.3 (d) : Inspection microscopique de Niveau 1 : taille des paquets en fonction de leur index.
+  P0124: Figure 4.3 (e) : Liste des paquets anormaux détectés par la Couche 1.
+  P0125: Figure 4.3 (f) : Centre SOC : table des incidents avec badges de sévérité et origine géographique.
+  P0126: Figure 5.1 : Configuration réseau du Poste 1 d'Audit (Kali Linux).
+  P0127: Figure 5.2 : Configuration réseau du Poste 2 de Supervision NetScan (Windows).
+  P0128: Figure 5.3 : Menu principal de NetScan sur le Poste 2 : sélection du mode [1] Surveillance en Direct.
+  P0129: Figure 5.4 : Simulation du balayage de reconnaissance furtif (nmap -sS).
+  P0130: Figure 5.5 : Détection en direct et qualification de l'alerte Port Scan par NetScan.
+  P0131: Figure 5.6 : Simulation de l'attaque par déni de service volumétrique (hping3 SYN Flood).
+  P0132: Figure 5.7 : Détection en temps réel et qualification de l'alerte Flood / DDoS par NetScan.
+  P0205: Figure 1.1 : Topologie du laboratoire d'expérimentation virtualisé (Kali Linux, Sonde NetScan et Metasploitable 2).
+  P0228: Figure 2.1 (a) : Déroulement nominal du Three-Way Handshake TCP.
+  P0233: Figure 2.1 (b) : Détournement du cycle par un scan furtif Nmap TCP SYN (envoi du flag RST).
+  P0237: Figure 2.2 : Mécanisme temporel de l'inondation TCP SYN Flood et saturation de la Backlog Queue.
+  P0258: Figure 2.3 : Partitionnement géométrique de l'espace de données et isolation rapide d'une anomalie par arbre iTree.
+  P0275: Figure 3.1 : Schéma directeur du pipeline d'ingestion et de détection Dual-Layer de NetScan.
+  P0332: Figure 4.1 : Interface en ligne de commande (CLI) de NetScan sous terminal Kali Linux.
+  P0335: Figure 4.2 (a) : Résumé global de l'analyse forensique (Couches 1 et 2).
+  P0337: Figure 4.2 (b) : Détail des anomalies de Couche 1 (répartition par type, sources suspectes et aperçu des paquets).
+  P0347: Figure 4.3 (a) : Menu de navigation latéral du tableau de bord (cinq pages).
+  P0349: Figure 4.3 (b) : Page d'analyse forensique PCAP à l'état initial (zone de dépôt d'une capture .pcap / .pcapng).
+  P0352: Figure 4.3 (c) : Bandeau des cinq indicateurs clés (KPI) en tête du Centre SOC (état initial, avant toute analyse).
+  P0360: Figure 4.3 (d) : Inspection microscopique de Niveau 1 : taille des paquets en fonction de leur index (anomalies colorées
+  P0362: Figure 4.3 (e) : Liste des paquets anormaux détectés par la Couche 1 (export CSV disponible).
+  P0365: Figure 4.3 (f) : Centre SOC : table des incidents avec badges de sévérité et origine géographique.
+  P0403: Figure 5.1 : Configuration réseau du Poste 1 d'Audit (Kali Linux).
+  P0406: Figure 5.2 : Configuration réseau du Poste 2 de Supervision NetScan (Windows).
+  P0413: Figure 5.3 : Menu principal de NetScan sur le Poste 2 : sélection du mode [1] Surveillance en Direct (Calibration → Moni
+  P0417: Figure 5.4 : Simulation du balayage de reconnaissance furtif (nmap -sS).
+  P0427: Figure 5.5 : Détection en direct et qualification de l'alerte Port Scan par NetScan.
+  P0433: Figure 5.6 : Simulation de l'attaque par déni de service volumétrique (hping3 SYN Flood).
+  P0442: Figure 5.7 : Détection en temps réel et qualification de l'alerte Flood / DDoS par NetScan.
+
+  Total figure captions: 44
+
+------------------------------------------------------------
+TABLE/TABLEAU CAPTIONS:
+------------------------------------------------------------
+  P0208: Tableau 1.1 : Matrice des spécifications fonctionnelles et contraintes techniques de NetScan.
+  P0211: Tableau 1.2 : Matrice d'évaluation et de mitigation des risques techniques du projet.
+  P0219: Tableau 2.1 : Comparaison synthétique entre détection par signatures et approche par Machine Learning.
+  P0270: Tableau 2.2 : Comparaison des propriétés algorithmiques d'Isolation Forest, One-Class SVM et k-Means.
+  P0286: Tableau 3.1 : Attributs de la Couche 1 (Length et Timestamp alimentent le modèle ; les autres alimentent les règles d'ét
+  P0291: Tableau 3.2 : Vecteur des métriques comportementales de la Couche 2 (Fenêtre de 5 secondes).
+  P0298: Tableau 3.3 : Synthèse comparative des hyperparamètres des deux couches d'Isolation Forest.
+  P0306: Tableau 4.1 : Stack technologique et bibliothèques mobilisées.
+  P0446: Tableau 5.1 : Synthèse comparative des résultats expérimentaux de détection sur capture hostile (sample_nmap_attack.pcap
+  P0448: Tableau 5.2 : Bilan comparatif des capacités de détection : Modèle Baseline vs NetScan.
+
+  Total tableau captions: 10
+
+------------------------------------------------------------
+TECHNICAL ACCURACY SPOT-CHECK:
+------------------------------------------------------------
+  Isolation Forest         :  24 occurrences OK
+  scikit-learn             :   5 occurrences OK
+  Streamlit                :  14 occurrences OK
+  Scapy                    :   4 occurrences OK
+  Plotly                   :  14 occurrences OK
+  GeoIP                    :   9 occurrences OK
+  config.yaml              :   6 occurrences OK
+  alerts_history.json      :   6 occurrences OK
+  netscan.py               :   5 occurrences OK
+  detection_engine.py      :   2 occurrences OK
+  dashboard.py             :   4 occurrences OK
+  i18n                     :   2 occurrences OK
+  Npcap                    :   6 occurrences OK
+  contamination            :   3 occurrences OK
+  sliding window           :   1 occurrences OK
+  Port Scan                :  11 occurrences OK
+  DDoS                     :  11 occurrences OK
+  SOC                      :  34 occurrences OK
+  SIEM                     :   3 occurrences OK
+
+------------------------------------------------------------
+PREVIOUS ISSUE CHECKS:
+------------------------------------------------------------
+  CHAPITRE I style: Heading 1 (expected: Heading 1) OK
+
+------------------------------------------------------------
+PARAGRAPHS WITH IMAGES:
+------------------------------------------------------------
+  Paragraphs containing images: 23
+  P0004 near: RAPPORT DE PROJET
+  P0204 near: •  Contrôle de version et traçabilité : Utilisation méthodique du système de ges
+  P0227 near: 3.  Le client confirme par une trame ACK (Acknowledge), la session est ouverte.
+  P0232 near: Du point de vue d'un capteur réseau unitaire, le paquet SYN initial émis par Nma
+  P0236 near: 2.2.2 L'Inondation par Déni de Service (SYN Flood)
+  P0257 near: Dans ce schéma géométrique, une observation anormale (très isolée dans l'espace)
+  P0274 near: 3.1 Pipeline global de traitement
+  P0331 near: •  Interface stylisée ANSI : Affichage soigné avec bannière ASCII, coloration dy
+  P0334 near: Figure 4.1 : Interface en ligne de commande (CLI) de NetScan sous terminal Kali 
+  P0336 near: Figure 4.2 (a) : Résumé global de l'analyse forensique (Couches 1 et 2).
+  P0346 near: Le tableau de bord expose les fonctionnalités suivantes :
+  P0348 near: Figure 4.3 (a) : Menu de navigation latéral du tableau de bord (cinq pages).
+  P0351 near: Figure 4.3 (b) : Page d'analyse forensique PCAP à l'état initial (zone de dépôt 
+  P0359 near: • Histogramme des scores de décision d'Isolation Forest : distribution des score
+  P0361 near: Figure 4.3 (d) : Inspection microscopique de Niveau 1 : taille des paquets en fo
+  P0364 near: Figure 4.3 (e) : Liste des paquets anormaux détectés par la Couche 1 (export CSV
+  P0402 near: Afin de valider l'opérabilité de NetScan sur du trafic réseau physique réel, l'e
+  P0405 near: Figure 5.1 : Configuration réseau du Poste 1 d'Audit (Kali Linux).
+  P0412 near: La sonde NetScan est démarrée sur le Poste 2 (terminal administrateur) depuis l'
+  P0416 near: Depuis le Poste 1 (192.168.1.116), un balayage furtif semi-ouvert est initié ver
+  P0426 near: 4. Décision NetScan :
+  P0432 near: 1. Commande offensive exécutée depuis le Poste 1 (Audit) :
+  P0441 near: Le modèle signale la fenêtre comme anormale ; les règles de qualification (Règle
+
+------------------------------------------------------------
+TABLE SUMMARIES:
+------------------------------------------------------------
+  Table 0: 11x3 | Header: ID | Exigence Fonctionnelle | Justification et Objectif Opér
+  Table 1: 5x4 | Header: Risque Identifié | Impact | Probabilité | Stratégie de Mitigation / Solu
+  Table 2: 1x1 | Header: # Exemple de signature Snort d
+  Table 3: 6x3 | Header: Critère d'Évaluation | NIDS Déterministe à Signatures | NIDS par Machine Learning (Net
+  Table 4: 5x4 | Header: Propriété | Isolation Forest | One-Class SVM | k-Means Anomaly
+  Table 5: 7x3 | Header: Attribut | Type | Rôle et Justification Cyberdéf
+  Table 6: 7x3 | Header: Feature Calculée | Formule Mathématique | Rôle dans la Détection
+  Table 7: 6x3 | Header: Paramètre de Configuration | Couche 1 (Unitaire) | Couche 2 (Comportementale)
+  Table 8: 13x3 | Header: Brique Logicielle | Bibliothèque / Outil | Rôle Opérationnel
+  Table 9: 4x4 | Header: Séquence de Trafic | Comportement au Niveau 1 (Par  | Comportement au Niveau 2 (Comp | Décision NetScan
+  Table 10: 5x4 | Header: Critère d'Évaluation | Modèle Baseline (Unitaire) | NetScan (Architecture Dual-Lay | Gain Opérationnel
+
+------------------------------------------------------------
+FRONT MATTER (first 30 paras):
+------------------------------------------------------------
+  P0002 [Normal              ] RAPPORT DE PROJET
+  P0005 [Normal              ] Conception et Développement d'un Système Intelligent de Détection d'Anomalies Réseau (Port Scans & D
+  P0011 [Normal              ] Réalisé par :
+  P0012 [Normal              ] Mohamed Reda Qiyaoui
+  P0014 [Heading 1           ] Dédicace
+  P0015 [Normal              ] À Allah, tout-puissant, qui m’accorde la force, la patience et la clarté nécessaires pour mener à bi
+  P0016 [Normal              ] À mes parents, pour leur sacrifice silencieux, leur confiance inconditionnelle et leurs prières qui 
+  P0017 [Normal              ] À ma famille, pour son soutien bienveillant et sa présence constante ;
+  P0018 [Normal              ] À ceux qui choisissent chaque jour de défendre, de comprendre et de sécuriser le cyberespace ;
+  P0019 [Normal              ] Et à la rigueur de l'effort personnel, face aux défis techniques, pour transformer la curiosité en e
+  P0020 [Normal              ] Je dédie ce travail, fruit d'exigence, de passion et de persévérance.
+  P0026 [Heading 1           ] Remerciements
+  P0027 [Normal              ] La réalisation de ce projet d'ingénierie et de recherche appliquée a bénéficié du soutien, des échan
+  P0028 [Normal              ] J'exprime ma profonde gratitude aux ingénieurs, mentors et professionnels de la sécurité des système
+  P0029 [Normal              ] Enfin, je tiens à saluer les contributeurs et mainteneurs de la communauté open-source (Scikit-Learn
+
+------------------------------------------------------------
+FULL PARAGRAPH LIST (non-empty, first 200):
+------------------------------------------------------------
+  P0002 [Normal              ] RAPPORT DE PROJET
+  P0004 [Normal              ] [IMG] 
+  P0005 [Normal              ] Conception et Développement d'un Système Intelligent de Détection d'Anomalies Réseau (Port
+  P0011 [Normal              ] Réalisé par :
+  P0012 [Normal              ] Mohamed Reda Qiyaoui
+  P0014 [Heading 1           ] Dédicace
+  P0015 [Normal              ] À Allah, tout-puissant, qui m’accorde la force, la patience et la clarté nécessaires pour 
+  P0016 [Normal              ] À mes parents, pour leur sacrifice silencieux, leur confiance inconditionnelle et leurs pr
+  P0017 [Normal              ] À ma famille, pour son soutien bienveillant et sa présence constante ;
+  P0018 [Normal              ] À ceux qui choisissent chaque jour de défendre, de comprendre et de sécuriser le cyberespa
+  P0019 [Normal              ] Et à la rigueur de l'effort personnel, face aux défis techniques, pour transformer la curi
+  P0020 [Normal              ] Je dédie ce travail, fruit d'exigence, de passion et de persévérance.
+  P0026 [Heading 1           ] Remerciements
+  P0027 [Normal              ] La réalisation de ce projet d'ingénierie et de recherche appliquée a bénéficié du soutien,
+  P0028 [Normal              ] J'exprime ma profonde gratitude aux ingénieurs, mentors et professionnels de la sécurité d
+  P0029 [Normal              ] Enfin, je tiens à saluer les contributeurs et mainteneurs de la communauté open-source (Sc
+  P0043 [Heading 1           ] Résumé
+  P0044 [Normal              ] Les systèmes de détection d'intrusion réseau (NIDS) reposant sur des bases de signatures s
+  P0045 [Normal              ] Ce rapport technique documente la conception, l'implémentation et la validation expériment
+  P0046 [Normal              ] NetScan intègre un orchestrateur en ligne de commande sous Kali Linux, une console SOC int
+  P0047 [Normal              ] Mots-clés : Cybersécurité, NIDS, Machine Learning non supervisé, Isolation Forest, Analyse
+  P0049 [Heading 1           ] Abstract
+  P0050 [Normal              ] Traditional Network Intrusion Detection Systems (NIDS) relying on static signature databas
+  P0051 [Normal              ] This technical report presents the design, implementation, and empirical validation of Net
+  P0052 [Normal              ] NetScan features a Kali Linux command-line orchestrator, an interactive Streamlit and Plot
+  P0053 [Normal              ] Keywords: Cybersecurity, NIDS, Unsupervised Machine Learning, Isolation Forest, Network Tr
+  P0058 [Heading 1           ] Table des Matières
+  P0059 [List Paragraph      ] Dédicace
+  P0060 [List Paragraph      ] Remerciements
+  P0061 [List Paragraph      ] Résumé / Abstract
+  P0062 [List Paragraph      ] Liste des Figures
+  P0063 [List Paragraph      ] Liste des Tableaux
+  P0064 [List Paragraph      ] Liste des Abréviations
+  P0065 [Normal              ] Introduction Générale
+  P0066 [Normal              ] •  Origine et enjeu de sécurité
+  P0067 [List Paragraph      ] •  Problématique centrale : L'angle mort des signatures face aux scans furtifs
+  P0068 [List Paragraph      ] •  Objectifs généraux et périmètre du projet NetScan
+  P0069 [List Paragraph      ] •  Organisation du document
+  P0070 [Normal              ] Chapitre I : Contexte Opérationnel, Spécifications et Démarche R&D
+  P0071 [Normal              ] 1.1 - Contexte de surveillance et environnement cible
+  P0072 [Normal              ] 1.2 - Démarche méthodologique en laboratoire R&D
+  P0073 [List Paragraph      ] 1.3 - Cahier des charges et spécifications fonctionnelles
+  P0074 [List Paragraph      ] 1.4 - Matrice d'évaluation et de mitigation des risques techniques
+  P0075 [Normal              ] Chapitre II : État de l'Art et Fondements Théoriques
+  P0076 [List Paragraph      ] 2.1 - Les systèmes de détection d'intrusion réseau (NIDS) conventionnels
+  P0077 [List Paragraph      ] 2.2 - Mécanismes des attaques cibles : Scan Nmap TCP SYN et Floods volumétriques
+  P0078 [List Paragraph      ] 2.3 - Paradigmes du Machine Learning en sécurité (Supervisé vs Non Supervisé)
+  P0079 [List Paragraph      ] 2.4 - L'algorithme Isolation Forest (Modélisation mathématique et formulation)
+  P0080 [Normal              ] Chapitre III : Architecture Système et Conception Technique
+  P0081 [List Paragraph      ] 3.1 - Pipeline global de traitement des flux
+  P0082 [List Paragraph      ] 3.2 - Ingestion réseau hybride (Mode direct promiscuité et captures PCAP/PCAPNG)
+  P0083 [List Paragraph      ] 3.3 - Ingénierie des caractéristiques (Feature Engineering)
+  P0084 [List Paragraph      ] 3.4 - Matrice de qualification heuristique et typage des menaces
+  P0085 [Normal              ] Chapitre IV : Implémentation Logicielle et Outils Développés
+  P0086 [List Paragraph      ] 4.1 - Environnement de développement et stack technologique
+  P0087 [Normal              ] 4.1.1 - Portabilité et prérequis pour l'environnement Windows
+  P0088 [Normal              ] 4.1.2 - Configuration déclarative centralisée (config.yaml et config_loader.py)
+  P0089 [Normal              ] 4.1.3 - Résilience d'exécution et robustesse sous Windows
+  P0090 [Normal              ] 4.1.4 - Empaquetage et standards de qualité du code
+  P0091 [List Paragraph      ] 4.2 - Orchestrateur en ligne de commande Linux/Kali (netscan.py)
+  P0092 [List Paragraph      ] 4.3 - Tableau de bord de supervision SOC interactif (dashboard.py)
+  P0093 [List Paragraph      ] 4.4 - Module de Journalisation d'Audit et de Remédiation Pare-feu (alerting.py & alerts_hi
+  P0094 [Normal              ] 4.4.1 - Journalisation d'audit et remédiation pare-feu (alerting.py)
+  P0095 [Normal              ] 4.4.2 - Enrichissement géographique et Threat Intelligence (geoip_resolver.py)
+  P0096 [List Paragraph      ] 4.5 - Générateur exécutif de rapports d'incident (report_generator.py)
+  P0097 [List Paragraph      ] 4.6 - Suite d'assurance qualité et tests de fumée (test_smoke.py)
+  P0098 [Normal              ] Chapitre V : Expérimentation et Validation
+  P0099 [Normal              ] 5.1 - Architecture du banc d'essai et topologie LAN
+  P0100 [List Paragraph      ] 5.2 - Scénario 1 : Étalonnage dynamique de la référence et détection d'un scan Nmap furtif
+  P0101 [List Paragraph      ] 5.3 - Scénario 2 : Détection d'une inondation SYN Flood
+  P0102 [List Paragraph      ] 5.4 - Analyse comparative et gains opérationnels
+  P0103 [Normal              ] Chapitre VI : Analyse des Performances, Retours d'Expérience et Perspectives
+  P0104 [Normal              ] 6.1 - Compétences techniques et professionnelles consolidées
+  P0105 [List Paragraph      ] 6.2 - Obstacles techniques rencontrés et arbitrages réalisés
+  P0106 [List Paragraph      ] 6.3 - Perspectives d'évolution du système
+  P0107 [Normal              ] Conclusion Générale
+  P0108 [Normal              ] Bibliographie et Webographie
+  P0110 [Heading 1           ] Liste des Figures
+  P0111 [List Paragraph      ] Figure 1.1 : Topologie du laboratoire d'expérimentation virtualisé (Kali Linux, Sonde NetS
+  P0112 [List Paragraph      ] Figure 2.1 (a) : Déroulement nominal du Three-Way Handshake TCP.
+  P0113 [List Paragraph      ] Figure 2.1 (b) : Détournement du cycle par un scan furtif Nmap TCP SYN (envoi du flag RST)
+  P0114 [List Paragraph      ] Figure 2.2 : Mécanisme temporel de l'inondation TCP SYN Flood et saturation de la Backlog 
+  P0115 [List Paragraph      ] Figure 2.3 : Partitionnement géométrique de l'espace de données et isolation rapide d'une 
+  P0116 [List Paragraph      ] Figure 3.1 : Schéma directeur du pipeline d'ingestion et de détection Dual-Layer de NetSca
+  P0117 [List Paragraph      ] Figure 4.1 : Interface en ligne de commande (CLI) de NetScan sous terminal Kali Linux.
+  P0118 [List Paragraph      ] Figure 4.2 (a) : Résumé global de l'analyse forensique (Couches 1 et 2).
+  P0119 [List Paragraph      ] Figure 4.2 (b) : Détail des anomalies de Couche 1 (répartition par type, sources suspectes
+  P0120 [List Paragraph      ] Figure 4.3 (a) : Menu de navigation latéral du tableau de bord (cinq pages).
+  P0121 [List Paragraph      ] Figure 4.3 (b) : Page d'analyse forensique PCAP à l'état initial (zone de dépôt d'une capt
+  P0122 [List Paragraph      ] Figure 4.3 (c) : Bandeau des cinq indicateurs clés (KPI) en tête du Centre SOC (état initi
+  P0123 [List Paragraph      ] Figure 4.3 (d) : Inspection microscopique de Niveau 1 : taille des paquets en fonction de 
+  P0124 [List Paragraph      ] Figure 4.3 (e) : Liste des paquets anormaux détectés par la Couche 1.
+  P0125 [List Paragraph      ] Figure 4.3 (f) : Centre SOC : table des incidents avec badges de sévérité et origine géogr
+  P0126 [List Paragraph      ] Figure 5.1 : Configuration réseau du Poste 1 d'Audit (Kali Linux).
+  P0127 [List Paragraph      ] Figure 5.2 : Configuration réseau du Poste 2 de Supervision NetScan (Windows).
+  P0128 [List Paragraph      ] Figure 5.3 : Menu principal de NetScan sur le Poste 2 : sélection du mode [1] Surveillance
+  P0129 [List Paragraph      ] Figure 5.4 : Simulation du balayage de reconnaissance furtif (nmap -sS).
+  P0130 [List Paragraph      ] Figure 5.5 : Détection en direct et qualification de l'alerte Port Scan par NetScan.
+  P0131 [List Paragraph      ] Figure 5.6 : Simulation de l'attaque par déni de service volumétrique (hping3 SYN Flood).
+  P0132 [List Paragraph      ] Figure 5.7 : Détection en temps réel et qualification de l'alerte Flood / DDoS par NetScan
+  P0134 [Heading 1           ] Liste des Tableaux
+  P0135 [List Paragraph      ] •  Tableau 1.1 : Matrice des spécifications fonctionnelles et contraintes techniques de Ne
+  P0136 [List Paragraph      ] •  Tableau 1.2 : Matrice d'évaluation et de mitigation des risques techniques du projet.
+  P0137 [List Paragraph      ] •  Tableau 2.1 : Comparaison synthétique entre détection par signatures et approche par Ma
+  P0138 [List Paragraph      ] •  Tableau 2.2 : Comparaison des algorithmes d'isolation (Isolation Forest, One-Class SVM 
+  P0139 [List Paragraph      ] •  Tableau 3.1 : Attributs de la Couche 1 (Length et Timestamp alimentent le modèle ; les 
+  P0140 [List Paragraph      ] •  Tableau 3.2 : Vecteur des métriques comportementales de la Couche 2 (Fenêtre de 5 secon
+  P0141 [List Paragraph      ] •  Tableau 3.3 : Synthèse comparative des hyperparamètres des deux couches d'Isolation For
+  P0142 [List Paragraph      ] •  Tableau 4.1 : Stack technologique, langages et bibliothèques logicielles mobilisées.
+  P0143 [List Paragraph      ] •  Tableau 5.1 : Synthèse comparative des résultats expérimentaux de détection sur capture
+  P0144 [List Paragraph      ] •  Tableau 5.2 : Bilan comparatif des capacités de détection : Modèle Baseline vs NetScan 
+  P0150 [Heading 1           ] Liste des Abréviations
+  P0151 [List Paragraph      ] ACL : Access Control List
+  P0152 [List Paragraph      ] API : Application Programming Interface
+  P0153 [List Paragraph      ] ARP : Address Resolution Protocol
+  P0154 [List Paragraph      ] ASCII : American Standard Code for Information Interchange
+  P0155 [List Paragraph      ] ASN : Autonomous System Number (Numéro de Système Autonome)
+  P0156 [List Paragraph      ] CLI : Command Line Interface
+  P0157 [List Paragraph      ] CP1252 : Windows-1252 (jeu de caractères occidental de Windows)
+  P0158 [List Paragraph      ] CSIRT: Computer Security Incident Response Team
+  P0159 [List Paragraph      ] CSV : Comma-Separated Values
+  P0160 [List Paragraph      ] DDoS : Distributed Denial of Service
+  P0161 [List Paragraph      ] DoS : Denial of Service
+  P0162 [List Paragraph      ] GeoIP : Géolocalisation d'Adresse IP
+  P0163 [List Paragraph      ] HTML/CSS: HyperText Markup Language / Cascading Style Sheets
+  P0164 [List Paragraph      ] HUD : Head-Up Display
+  P0165 [List Paragraph      ] i18n : Internationalisation (adaptation linguistique de l'interface)
+  P0166 [List Paragraph      ] ICMP : Internet Control Message Protocol
+  P0167 [List Paragraph      ] IDS / NIDS: (Network) Intrusion Detection System
+  P0168 [List Paragraph      ] IP : Internet Protocol
+  P0169 [List Paragraph      ] KPI : Key Performance Indicator (Indicateur Clé de Performance)
+  P0170 [List Paragraph      ] L2 / L3 / L4 : Couches OSI 2 (Liaison), 3 (Réseau), 4 (Transport)
+  P0171 [List Paragraph      ] LRU : Least Recently Used (Algorithme de mise en cache mémoire)
+  P0172 [List Paragraph      ] MAC : Media Access Control
+  P0173 [List Paragraph      ] ML : Machine Learning (Apprentissage Automatique)
+  P0174 [List Paragraph      ] MTU : Maximum Transmission Unit (1 500 octets par défaut sous Ethernet)
+  P0175 [List Paragraph      ] OS : Operating System (Système d'Exploitation)
+  P0176 [List Paragraph      ] PCAP : Packet Capture
+  P0177 [List Paragraph      ] PEP : Python Enhancement Proposal
+  P0178 [List Paragraph      ] R&D : Recherche et Développement
+  P0179 [List Paragraph      ] RFC : Request For Comments (Spécifications protocolaires de l'IETF)
+  P0180 [List Paragraph      ] RST : Reset (Drapeau de réinitialisation TCP)
+  P0181 [List Paragraph      ] SIEM: Security Information and Event Management
+  P0182 [List Paragraph      ] SOC : Security Operations Center
+  P0183 [List Paragraph      ] SVM : Support Vector Machine
+  P0184 [List Paragraph      ] SYN : Synchronize (Drapeau de synchronisation TCP)
+  P0185 [List Paragraph      ] TCP : Transmission Control Protocol
+  P0186 [List Paragraph      ] UDP : User Datagram Protocol
+  P0187 [List Paragraph      ] UI / UX : User Interface / User Experience
+  P0188 [List Paragraph      ] VM : Virtual Machine (Machine Virtuelle)
+  P0189 [List Paragraph      ] YAML : YAML Ain't Markup Language
+  P0190 [Heading 1           ] Introduction Générale
+  P0191 [Normal              ] L'interconnexion massive des réseaux et la transformation numérique des entreprises ont ch
+  P0192 [Normal              ] Dans le cadre MITRE ATT&CK et la Cyber Kill Chain, la reconnaissance constitue la première
+  P0193 [Normal              ] La surveillance réseau s'est historiquement appuyée sur des NIDS déterministes comme Snort
+  P0194 [Normal              ] Ce rapport est articulé en six chapitres. Nous poserons d'abord le contexte opérationnel e
+  P0195 [Heading 1           ] CHAPITRE I : CONTEXTE OPÉRATIONNEL, SPÉCIFICATIONS ET DÉMARCHE R&D
+  P0196 [Heading 2           ] 1.1 Contexte de Surveillance et Environnement Cible
+  P0197 [Normal              ] Dans les réseaux locaux multi-utilisateurs, le réseau local centralise des flux hétérogène
+  P0198 [Heading 2           ] 1.2 Démarche méthodologique en laboratoire R&D
+  P0199 [Normal              ] Face à l'exigence de concevoir une solution complète et immédiatement opérationnelle, le p
+  P0200 [List Paragraph      ] •  Station de pilotage : Système d'exploitation Kali Linux configuré avec les privilèges r
+  P0201 [List Paragraph      ] •  Laboratoire d'émulation réseau : Déploiement d'un environnement virtualisé isolé compre
+  P0202 [List Paragraph      ] •  Contrôle de version et traçabilité : Utilisation méthodique du système de gestion de ve
+  P0203 [Normal              ] La topologie virtualisée mise en place pour les phases de tests et d'expérimentation R&D e
+  P0204 [Normal              ] [IMG] 
+  P0205 [Normal              ] Figure 1.1 : Topologie du laboratoire d'expérimentation virtualisé (Kali Linux, Sonde NetS
+  P0206 [Heading 2           ] 1.3 Cahier des charges et spécifications fonctionnelles
+  P0207 [Normal              ] Le système NetScan a été élaboré pour satisfaire dix exigences techniques fondamentales :
+  P0208 [Normal              ] Tableau 1.1 : Matrice des spécifications fonctionnelles et contraintes techniques de NetSc
+  P0209 [Heading 2           ] 1.4 Matrice d'analyse et de gestion des risques
+  P0210 [Normal              ] Tout projet d'ingénierie logicielle en cybersécurité comporte des risques techniques inhér
+  P0211 [Normal              ] Tableau 1.2 : Matrice d'évaluation et de mitigation des risques techniques du projet.
+  P0213 [Heading 1           ] CHAPITRE II : ÉTAT DE L'ART ET FONDEMENTS THÉORIQUES
+  P0214 [Heading 2           ] 2.1 Les systèmes de détection d'intrusion réseau traditionnels
+  P0215 [Normal              ] Un Système de Détection d'Intrusion Réseau (NIDS) surveille le trafic circulant sur un seg
+  P0216 [Normal              ] Les solutions historiques leaders, telles que Snort ou Suricata, opèrent selon le principe
+  P0218 [Normal              ] Ces outils constituent le socle de la défense périmétrique pour intercepter les vulnérabil
+  P0219 [Normal              ] Tableau 2.1 : Comparaison synthétique entre détection par signatures et approche par Machi
+  P0220 [Heading 2           ] 2.2 Mécanismes des attaques cibles
+  P0221 [Heading 3           ] 2.2.1 Le Scan de Ports Furtif (TCP SYN Stealth Scan)
+  P0222 [Normal              ] Le protocole TCP (RFC 793) garantit la fiabilité des échanges via la négociation en trois 
+  P0223 [List Paragraph      ] 1.  Le client émet une trame avec le drapeau SYN (Synchronize).
+  P0224 [List Paragraph      ] 2.  Le serveur répond par une trame SYN-ACK (Synchronize-Acknowledge).
+  P0225 [List Paragraph      ] 3.  Le client confirme par une trame ACK (Acknowledge), la session est ouverte.
+  P0226 [Normal              ] Le processus standard d'ouverture de connexion est illustré par la Figure 2.1 (a) :
+  P0227 [Normal              ] [IMG] 
+  P0228 [Normal              ] Figure 2.1 (a) : Déroulement nominal du Three-Way Handshake TCP.
+  P0229 [Normal              ] Dans le cas d'un balayage furtif semi-ouvert (nmap -sS), Nmap altère délibérément ce cycle
+  P0230 [Normal              ] Du point de vue d'un capteur réseau unitaire, le paquet SYN initial émis par Nmap est irré
+  P0231 [Normal              ] l'altération du cycle par Nmap pour contourner la journalisation applicative est illustrée
+  P0232 [Normal              ] [IMG] 
+  P0233 [Normal              ] Figure 2.1 (b) : Détournement du cycle par un scan furtif Nmap TCP SYN (envoi du flag RST)
+  P0234 [Heading 3           ] 2.2.2 L'Inondation par Déni de Service (SYN Flood)
+  P0235 [Normal              ] L'attaque par saturation SYN Flood exploite la file d'attente des connexions semi-ouvertes
+  P0236 [Normal              ] [IMG] 
+  P0237 [Normal              ] Figure 2.2 : Mécanisme temporel de l'inondation TCP SYN Flood et saturation de la Backlog 
+  P0238 [Heading 2           ] 2.3 Paradigmes du Machine Learning en sécurité
+  P0239 [Normal              ] L'apprentissage automatique appliqué à la cybersécurité défensive se divise en deux approc
+  P0240 [List Paragraph      ] •  L'apprentissage supervisé : L'algorithme apprend sur un ensemble de données préalableme
+  ... (truncated at 200)

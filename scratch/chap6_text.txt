@@ -1,0 +1,54 @@
+P0461 [Heading 1]: CHAPITRE VI : ANALYSE DES PERFORMANCES, RETOURS D'EXPÉRIENCE ET PERSPECTIVES
+P0462 [Heading 2]: 6.1 Compétences techniques et professionnelles consolidées :
+P0463 [List Paragraph]: Ce projet technique d'ingénierie R&D a permis de concrétiser et d'approfondir des compétences avancées en cybersécurité :
+P0464 [List Paragraph]: 1.  Expertise Réseau & Protocoles : Maîtrise intime des en-têtes de la pile TCP/IP, analyse fine des drapeaux de contrôle (SYN, RST, ACK) et décodage bas niveau de trames pcap.
+P0465 [List Paragraph]: 2.  Science des Données & Intelligence Artificielle : Modélisation mathématique du Machine Learning non supervisé, paramétrage de l'algorithme Isolation Forest et ingénierie de variables temporelles.
+P0466 [List Paragraph]: 3.  Architecture Logicielle & Culture SOC : Conception d'un système modulaire intégrant une interface graphique ergonomique (Streamlit / Plotly), une configuration déclarative, un script de tests de fumée et un système de traçabilité forensique par journalisation d'audit persistante.
+P0467 [List Paragraph]: 4.  Rigueur et Méthodologie : Conduite autonome d'un projet d'ingénierie complet depuis l'analyse de l'existant jusqu'à la validation expérimentale sur banc d'essai hostile.
+P0468 [List Paragraph]: 5.  Cyber Threat Intelligence (CTI) : Conception d'un module d'enrichissement contextuel des incidents (origine géographique, FAI / ASN, distinction trafic interne et externe), avec cache mémoire et tolérance aux pannes réseau, afin d'accélérer la qualification des alertes par l'analyste SOC.
+P0469 [Heading 2]: 6.2 Obstacles techniques rencontrés et arbitrages réalisés
+P0470 [List Paragraph]: •  Angle mort du scan Nmap unitaire : Le script initial échouait à repérer les paquets SYN légitimes. La conception de l'architecture Dual-Layer et l'introduction de la métrique de diversité des ports couplées au garde-fou déterministe anti-scan lent, ont permis de détecter ce cas sur les scénarios testés.
+P0471 [List Paragraph]: •  Gestion des sockets bruts sous Linux : L'écoute passive nécessite des droits privilégiés (root). Une vérification préventive intégrée dans l'orchestrateur informe clairement l'utilisateur sans interruption brutale du programme.
+P0472 [List Paragraph]: •  Contraintes de performances : Les itérations de boucles Python classiques sur des milliers de paquets provoquaient des lenteurs d'affichage. La vectorisation intégrale sous Pandas a fluidifié l'expérience utilisateur sur le tableau de bord.
+P0473 [List Paragraph]: • Attribution erronée de l'IP attaquante en surveillance directe : Lors des premiers tests en écoute passive, le trafic réseau émis par la station de supervision elle-même faussait la cartographie des flux et l'identification de la source hostile. L'intégration de la routine filter_local_ip() (détection dynamique de l'hôte local pour isoler strictement les trames entrantes suspectes) a résolu ce biais et garanti l'attribution exacte de l'attaquant (192.168.1.116).
+P0474 [List Paragraph]: • Modularisation du code de l'interface : L'enrichissement du tableau de bord (graphiques interactifs, feuille de style, composants de présentation) rendait difficile la lecture et la maintenance d'un code d'interface regroupé dans un seul module. La séparation en ui_components.py (composants), ui_charts.py (graphiques Plotly) et assets/css/dashboard.css (style) a isolé les responsabilités et permet de modifier un élément visuel sans toucher à la logique d'analyse ; elle s'accompagne d'un contrôle statique du code par Ruff.
+P0475 [List Paragraph]: • Encodage des terminaux Windows (CP1252) : L'affichage de blocs graphiques Unicode dans la console provoquait une exception UnicodeEncodeError sous Windows. Leur remplacement par des caractères ASCII sûrs (#) a supprimé l'erreur, et la politique asyncio WindowsSelectorEventLoopPolicy a été prise en charge pour assurer la fluidité de la capture PyShark / Scapy.
+P0476 [List Paragraph]: • Visualisation continue des scores d'Isolation Forest : Une décision binaire (normal / anormal) ne permet pas d'apprécier la marge qui sépare une fenêtre de la frontière de décision. La conservation, dans le DataFrame des Couches 1 et 2, de la colonne continue anomaly_score issue de model.score_samples() permet de tracer la distribution des scores et de matérialiser le seuil d'anomalie par un marqueur vertical, rendant la frontière de décision lisible par l'analyste.
+P0477 [Heading 2]: 6.3 Perspectives d'évolution du système
+P0478 [Normal]: NetScan constitue une base solide pour de futures extensions professionnelles :
+P0479 [List Paragraph]: Intégration SIEM (Wazuh / Splunk) : Exportation standardisée des événements de détection au format Syslog / CEF (Common Event Format) pour corrélation centralisée au sein d'un SIEM d'entreprise.
+P0480 [List Paragraph]: Passage en mode actif en coupure (Inline NIPS) : Automatisation de l'application immédiate des règles pare-feu actuellement seulement générées sous forme de commandes par alerting.py (blocage direct sans validation humaine manuelle) couplée à une table d'expiration temporelle des bannissements (jail timeout).
+P0481 [List Paragraph]: Évaluation quantitative : Exécution de NetScan sur le jeu CIC-IDS2017 (journées PortScan et DoS) avec calcul de la précision, du rappel, du F1 et de la matrice de confusion, tests de trafic légitime bruité (téléchargement volumineux, streaming, sauvegarde) et étude d'ablation.
+P0482 [List Paragraph]: Sondes Distribuées & Détection Collaborative : Déploiement de micro-sondes d'écoute sur différents sous-réseaux industriels transmettant leurs métriques comportementales vers un serveur d'IA centralisé.
+P0483 [List Paragraph]: Calibrage assisté par la distribution des scores : Exploiter l'histogramme des scores anomaly_score pour ajuster les taux de contamination de config.yaml à partir de captures de référence, en lien avec l'étude d'ablation et l'évaluation sur CIC-IDS2017 évoquées ci-dessus.
+P0484 [List Paragraph]: Industrialisation de la qualité logicielle : Intégrer Ruff au workflow GitHub Actions existant, étendre la suite de tests aux modules ui_components.py, ui_charts.py et config_loader.py, et vérifier automatiquement la complétude des catalogues locales/fr.json, en.json et es.json.
+P0485 [List Paragraph]: Consolidation multiplateforme : Valider systématiquement le comportement de la capture et de l'affichage console sous Windows et Linux (encodage, politique asyncio) afin de garantir une expérience identique sur les deux familles de systèmes.
+P0486 [List Paragraph]: Threat Intelligence hors-ligne et cartographie mondiale : Intégrer une base MaxMind GeoLite2 locale afin de supprimer la dépendance au service REST externe et la transmission d'adresses à un tiers, puis proposer une cartographie géospatiale mondiale des attaquants (carte 3D ou choroplèthe).
+P0488 [Heading 1]: CONCLUSION GÉNÉRALE
+P0489 [Normal]: Le projet NetScan apporte une réponse concrète et opérationnelle à un défi majeur de sécurité défensive : détecter des activités hostiles furtives sans dépendre de bases de signatures statiques.
+P0490 [Normal]: En associant l'algorithme mathématique non supervisé Isolation Forest à une architecture d'analyse à deux couches (Dual-Layer Architecture), NetScan montre qu'une trame isolée d'apparence normale peut révéler une intention hostile une fois replacée dans son contexte comportemental.
+P0491 [Normal]: Au-delà de la réussite technique d'un outil complet doté d'une double interface (CLI Kali Linux et tableau de bord web Streamlit et Plotly, trilingue), d'une configuration déclarative, d'un module d'enrichissement géographique des adresses sources (Cyber Threat Intelligence), d'un module de journalisation d'audit permettant l'inspection des alertes passées et d'un générateur de rapports d'incident forensiques, ce projet m'a permis d'acquérir une vision transverse de la cybersécurité. Il m'a appris à conjuguer la théorie mathématique du Machine Learning avec les impératifs opérationnels de l'ingénierie réseau.
+P0492 [Normal]: Éprouvé sur un banc d'essai LAN isolé et sur des scénarios synthétiques, NetScan pose des bases solides pour l'outillage moderne des équipes de détection et de réponse à incident (SOC / CSIRT).
+P0494 [Heading 1]: BIBLIOGRAPHIE ET WEBOGRAPHIE
+P0495 [Heading 3]: Publications Scientifiques & Normes Fondamentales
+P0496 [List Paragraph]: 1. Liu, F. T., Ting, K. M., & Zhou, Z. H. (2008). Isolation Forest. Eighth IEEE International Conference on Data Mining (ICDM), pp. 413-422.
+P0497 [List Paragraph]: 2. Postel, J. (1981). Transmission Control Protocol - Protocol Specification. RFC 793, Defense Advanced Research Projects Agency (DARPA).
+P0498 [List Paragraph]: 3. Fyodor (Gordon Lyon). (2009). Nmap Network Scanning: The Official Nmap Project Guide to Network Discovery and Vulnerability Scanning. Insecure.Com LLC.
+P0499 [List Paragraph]: 4. Scarfone, K., & Mell, P. (2007). Guide to Intrusion Detection and Prevention Systems (IDPS). NIST Special Publication 800-94, National Institute of Standards and Technology.
+P0500 [List Paragraph]: 5. Cichonski, P., Millar, T., Grance, T., & Scarfone, K. (2012). Computer Security Incident Handling Guide. NIST Special Publication 800-61 Rev. 2.
+P0501 [Heading 3]: Documentation Technique & Outils Logiciels
+P0502 [List Paragraph]: 6. Scikit-Learn Documentation: IsolationForest - Ensemble methods for anomaly detection.
+P0503 [Normal]: URL: https://scikit-learn.org/stable/modules/ensemble.html#isolation-forest
+P0504 [List Paragraph]: 7. Wireshark & TShark Official Documentation: Network Protocol Analyzer Reference Manual.
+P0505 [Normal]: URL: https://www.wireshark.org/docs/
+P0506 [List Paragraph]: 8. Streamlit Open-Source Community: The fastest way to build and share data apps.
+P0507 [Normal]: URL: https://docs.streamlit.io/
+P0508 [List Paragraph]: 9. Plotly Python Graphing Library : Interactive Dark Theme Visualizations for Python.
+P0509 [Normal]: URL: https://plotly.com/python/
+P0510 [List Paragraph]: 10. Kent, K., & Souppaya, M. (2006).  Guide to Computer Security Log Management NIST Special Publication 800-92, National Institute of Standards and Technology.
+P0511 [List Paragraph]: 11. Center for Internet Security (CIS): CIS Critical Security Controls Version 8.
+P0512 [Normal]: URL: https://www.cisecurity.org/controls
+P0513 [Normal]: 12. Nmap Project Official Windows Release: *Free Security Scanner, Port Scanner, & Network Exploration Tool for Windows. *
+P0514 [Normal]: URL: https://nmap.org/download.html
+P0515 [Normal]: 13. Npcap Project (Nmap Software LLC): Packet Capture library for Windows with raw packet capturing and injection capabilities.
+P0516 [Normal]: URL: https://npcap.com/
